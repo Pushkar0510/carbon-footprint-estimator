@@ -1,0 +1,10 @@
+{
+  "name": "carbon-footprint-estimator-frontend",
+  "version": "1.0.0",
+  "description": "Frontend Dashboard for Carbon Footprint Estimator for Software Codebases",
+  "scripts": {
+    "dev": "npx serve -s . -p 3000",
+    "start": "npx serve -s . -p 3000"
+  },
+  "dependencies": {}
+}

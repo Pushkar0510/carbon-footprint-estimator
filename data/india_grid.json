@@ -1,0 +1,31 @@
+{
+  "description": "State-wise electricity grid carbon intensity data for India (g CO2/kWh)",
+  "source": "Central Electricity Authority (CEA) / Grid Emission Factors",
+  "unit": "g CO2 / kWh",
+  "default_national_average": 710.0,
+  "states": {
+    "Maharashtra": 790.0,
+    "Gujarat": 710.0,
+    "Tamil Nadu": 650.0,
+    "Karnataka": 580.0,
+    "Uttar Pradesh": 820.0,
+    "West Bengal": 800.0,
+    "Rajasthan": 750.0,
+    "Madhya Pradesh": 770.0,
+    "Telangana": 730.0,
+    "Andhra Pradesh": 710.0,
+    "Kerala": 420.0,
+    "Punjab": 690.0,
+    "Haryana": 740.0,
+    "Bihar": 840.0,
+    "Odisha": 810.0,
+    "Assam": 610.0,
+    "Delhi": 680.0,
+    "Himachal Pradesh": 250.0,
+    "Uttarakhand": 310.0,
+    "Goa": 660.0,
+    "Chhattisgarh": 860.0,
+    "Jharkhand": 850.0,
+    "Jammu and Kashmir": 280.0
+  }
+}

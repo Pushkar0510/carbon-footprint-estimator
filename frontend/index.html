@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbon Footprint Estimator — Software Codebase Sustainability</title>
+  <meta name="description" content="A developer-centric tool for estimating, analyzing, and reducing the carbon footprint of software execution.">
+  <link rel="stylesheet" href="style.css">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-leaf"></i>
+      </div>
+      <div>
+        <div class="brand-title">Carbon Footprint Estimator</div>
+      </div>
+      <span class="brand-tag">FastAPI Engine</span>
+    </div>
+    <div class="nav-status">
+      <div class="status-badge" id="apiStatusBadge">
+        <div class="dot"></div>
+        <span>Backend Connected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs">
+      <button class="tab-btn active" onclick="switchTab('profiler')">
+        <i class="fa-solid fa-bolt"></i> Carbon Profiler
+      </button>
+      <button class="tab-btn" onclick="switchTab('grid')">
+        <i class="fa-solid fa-earth-asia"></i> India Grid Factors
+      </button>
+      <button class="tab-btn" onclick="switchTab('budget')">
+        <i class="fa-solid fa-chart-pie"></i> Carbon Budget
+      </button>
+      <button class="tab-btn" onclick="switchTab('advisor')">
+        <i class="fa-solid fa-code"></i> Green Advisor (AST)
+      </button>
+      <button class="tab-btn" onclick="switchTab('ml')">
+        <i class="fa-solid fa-brain"></i> ML Predictor
+      </button>
+    </nav>
+
+    <!-- Tab 1: Carbon Profiler -->
+    <section id="tab-profiler" class="tab-content active">
+      <div class="grid-2">
+        
+        <!-- Left: Code Input Card -->
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-terminal"></i> Python Code Executor & Profiler</span>
+          </div>
+
+          <div class="editor-header">
+            <span style="font-size: 0.82rem; color: var(--text-muted);">Quick Presets:</span>
+            <div class="preset-pills">
+              <span class="pill" onclick="loadPreset('matrix')">Matrix Multiplication</span>
+              <span class="pill" onclick="loadPreset('loop')">Heavy Loop O(N)</span>
+              <span class="pill" onclick="loadPreset('io')">File I/O Loop</span>
+            </div>
+          </div>
+
+          <textarea id="codeEditor" class="code-textarea" spellcheck="false"># Write Python code to profile carbon emissions
+import time
+
+def process_data(n=300000):
+    total = 0
+    for i in range(n):
+        total += i * i
+    return total
+
+print("Processing finished:", process_data())
+</textarea>
+
+          <div class="form-row">
+            <div style="flex: 1;">
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Region Grid Intensity:</label>
+              <select id="regionSelect" class="select-input" style="width: 100%;">
+                <option value="Maharashtra" selected>Maharashtra (790 g CO₂/kWh)</option>
+                <option value="Gujarat">Gujarat (710 g CO₂/kWh)</option>
+                <option value="Tamil Nadu">Tamil Nadu (650 g CO₂/kWh)</option>
+                <option value="Karnataka">Karnataka (580 g CO₂/kWh)</option>
+                <option value="Uttar Pradesh">Uttar Pradesh (820 g CO₂/kWh)</option>
+                <option value="Kerala">Kerala (420 g CO₂/kWh)</option>
+              </select>
+            </div>
+            <div>
+              <label style="visibility: hidden; display: block; margin-bottom: 0.3rem;">Run</label>
+              <button class="btn-primary" onclick="runProfiling()">
+                <i class="fa-solid fa-play"></i> Profile Execution
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Results Dashboard -->
+        <div>
+          <!-- Key Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Estimated Emissions</div>
+              <div class="metric-value" id="valEmissions">0.000 <span style="font-size: 0.9rem;">g CO₂</span></div>
+              <div class="metric-sub" id="valEmissionsMg">0.000 mg CO₂</div>
+            </div>
+
+            <div class="metric-card blue">
+              <div class="metric-label">Execution Time</div>
+              <div class="metric-value" id="valRuntime">0.000 <span style="font-size: 0.9rem;">s</span></div>
+              <div class="metric-sub" id="valCpu">CPU: 0.0%</div>
+            </div>
+
+            <div class="metric-card purple">
+              <div class="metric-label">Energy Consumed</div>
+              <div class="metric-value" id="valEnergy">0.000 <span style="font-size: 0.9rem;">Wh</span></div>
+              <div class="metric-sub" id="valPower">Power: 0.0 W</div>
+            </div>
+
+            <div class="metric-card amber">
+              <div class="metric-label">Equivalencies</div>
+              <div class="metric-value" id="valEquiv">0.00 <span style="font-size: 0.8rem;">Charges</span></div>
+              <div class="metric-sub" id="valCar">0.00 meters driven</div>
+            </div>
+          </div>
+
+          <!-- Hotspot Table Card -->
+          <div class="card">
+            <div class="card-title">
+              <span><i class="fa-solid fa-fire-flame-curved"></i> Carbon Hotspot Analysis</span>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Function</th>
+                    <th>Runtime</th>
+                    <th>Share %</th>
+                    <th>CO₂ Contributed</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="hotspotTableBody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                      Run a profiling execution to view function-level carbon hotspots.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Console Output -->
+            <div style="margin-top: 1rem;">
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Standard Output (stdout):</span>
+              <pre id="stdoutConsole" style="background: #090d14; border: 1px solid var(--border-color); border-radius: 6px; padding: 0.8rem; font-family: var(--font-code); font-size: 0.82rem; color: #34d399; max-height: 100px; overflow-y: auto;">Run execution output will appear here...</pre>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tab 2: India Grid Factors -->
+    <section id="tab-grid" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span><i class="fa-solid fa-earth-asia"></i> State-wise Electricity Grid Carbon Intensity (India)</span>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Source: Central Electricity Authority (CEA)</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Grid carbon intensity determines the grams of CO₂ emitted per kWh of electrical energy consumed in each region.
+        </p>
+        <div class="state-cards-grid" id="stateGridContainer">
+          <!-- State cards populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Carbon Budget -->
+    <section id="tab-budget" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-sliders"></i> Set Project Carbon Budget</span>
+          </div>
+          <div style="margin-bottom: 1.2rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Project Identifier:</label>
+            <input type="text" id="budgetIdInput" class="select-input" value="default" style="width: 100%;">
+          </div>
+          <div style="margin-bottom: 1.2rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Monthly Limit (grams CO₂):</label>
+            <input type="number" id="budgetLimitInput" class="number-input" value="5000" style="width: 100%;">
+          </div>
+          <button class="btn-primary" onclick="updateBudget()">
+            <i class="fa-solid fa-save"></i> Save Budget Threshold
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-chart-pie"></i> Carbon Budget Monitor</span>
+            <span id="budgetStatusBadge" class="brand-tag">Within Budget</span>
+          </div>
+          
+          <div style="margin: 1.5rem 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span>Monthly Consumption</span>
+              <strong id="budgetUsageLabel">0.00 / 5000.00 g CO₂</strong>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right;" id="budgetPercentLabel">0% Utilized</div>
+          </div>
+
+          <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <i class="fa-solid fa-circle-info"></i> Automated alerts are triggered when budget utilization reaches 75% or exceeds 100%.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Green Advisor (AST) -->
+    <section id="tab-advisor" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-microchip"></i> Static Code Analyzer</span>
+          </div>
+          <textarea id="advisorCodeInput" class="code-textarea" style="height: 260px;" spellcheck="false"># Paste code to analyze for sustainability issues
+def calculate_matrix():
+    # Example nested loop & I/O inside loop
+    for i in range(100):
+        for j in range(100):
+            val = i * j
+            print("Current value:", val)
+</textarea>
+          <div style="margin-top: 1rem;">
+            <button class="btn-primary" onclick="runGreenAdvisor()">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Green Code Patterns
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-list-check"></i> Sustainability Recommendations</span>
+          </div>
+          <div id="advisorResultsContainer">
+            <p style="color: var(--text-dim); text-align: center; padding: 2rem;">
+              Click "Analyze Green Code Patterns" to inspect AST for energy inefficiencies.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 5: ML Predictor -->
+    <section id="tab-ml" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-brain"></i> Pre-Execution Emission Predictor</span>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Code Snippet:</label>
+            <textarea id="mlCodeInput" class="code-textarea" style="height: 180px;" spellcheck="false">for i in range(1000):
+    for j in range(1000):
+        s = i * j</textarea>
+          </div>
+
+          <div class="form-row">
+            <div style="flex: 1;">
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Expected Input Size (N):</label>
+              <input type="number" id="mlInputSize" class="number-input" value="1000" style="width: 100%;">
+            </div>
+            <div>
+              <label style="visibility: hidden; display: block; margin-bottom: 0.3rem;">Predict</label>
+              <button class="btn-primary" onclick="runMLPrediction()">
+                <i class="fa-solid fa-crystal-ball"></i> Forecast Carbon
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-chart-line"></i> Forecast Summary</span>
+          </div>
+
+          <div class="metrics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1rem;">
+            <div class="metric-card">
+              <div class="metric-label">Predicted CO₂</div>
+              <div class="metric-value" id="mlPredCo2">0.000 <span style="font-size: 0.8rem;">g</span></div>
+            </div>
+            <div class="metric-card blue">
+              <div class="metric-label">Predicted Runtime</div>
+              <div class="metric-value" id="mlPredTime">0.000 <span style="font-size: 0.8rem;">s</span></div>
+            </div>
+          </div>
+
+          <div style="background: rgba(13, 17, 23, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+              <span style="color: var(--text-muted);">Algorithmic Complexity:</span>
+              <strong id="mlComplexity" style="color: var(--warning-amber);">O(1)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Confidence Score:</span>
+              <strong id="mlConfidence" style="color: var(--primary-emerald);">0.0%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Carbon Footprint Estimator for Software Codebases &bull; FastAPI + Python Profiling Engine
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
