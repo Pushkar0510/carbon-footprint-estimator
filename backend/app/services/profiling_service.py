@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 
 from engine.executor import run_script
 from engine.advisor import analyze_code_ast
+from engine.line_attribution import attribute_code_lines
 from backend.app.config import settings
 from backend.app.services.budget_service import record_project_emissions
 
@@ -29,7 +30,7 @@ def run_script_from_content(
     os.close(fd)
 
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    timestamp = datetime.datetime.utcnow().isoformat() + "Z"
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -53,22 +54,30 @@ def run_script_from_content(
                 "equivalencies": {"smartphone_charges": 0.0, "car_meters_driven": 0.0},
             }
 
-        hotspots = []
         emissions_g = metrics.get("emissions_g_co2", 0.0)
 
-        hotspots.append({
-            "function": "main_execution",
-            "filename": "script.py",
-            "lineno": 1,
-            "ncalls": 1,
-            "cumtime_s": metrics.get("execution_time_s", 0.0),
-            "contribution_pct": 100.0,
-            "attributed_co2_g": emissions_g,
-            "is_hotspot": True,
-        })
+        # Run line-level and function-level attribution
+        line_attr = attribute_code_lines(script_content, total_emissions_g=emissions_g)
+        hotspots = line_attr.get("function_hotspots", [])
+        if not hotspots:
+            hotspots.append({
+                "function": "main_execution",
+                "filename": "script.py",
+                "lineno": 1,
+                "ncalls": 1,
+                "cumtime_s": metrics.get("execution_time_s", 0.0),
+                "contribution_pct": 100.0,
+                "attributed_co2_g": emissions_g,
+                "is_hotspot": True,
+            })
+
+        line_stats = line_attr.get("line_stats", [])
 
         if effective_project_id and emissions_g > 0:
             record_project_emissions(effective_project_id, emissions_g)
+
+        stdout = exec_result.get("stdout", "") or line_attr.get("stdout", "")
+        stderr = exec_result.get("stderr", "") or line_attr.get("stderr", "")
 
         report = {
             "status": "ok" if exec_result.get("returncode") == 0 else "error",
@@ -77,8 +86,9 @@ def run_script_from_content(
             "timestamp": timestamp,
             "metrics": metrics,
             "hotspots": hotspots,
-            "stdout": exec_result.get("stdout", ""),
-            "stderr": exec_result.get("stderr", ""),
+            "line_stats": line_stats,
+            "stdout": stdout,
+            "stderr": stderr,
         }
 
         _RUN_HISTORY.insert(0, report)

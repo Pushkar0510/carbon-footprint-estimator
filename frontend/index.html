@@ -62,12 +62,20 @@
             <span><i class="fa-solid fa-terminal"></i> Python Code Executor & Profiler</span>
           </div>
 
-          <div class="editor-header">
-            <span style="font-size: 0.82rem; color: var(--text-muted);">Quick Presets:</span>
-            <div class="preset-pills">
-              <span class="pill" onclick="loadPreset('matrix')">Matrix Multiplication</span>
-              <span class="pill" onclick="loadPreset('loop')">Heavy Loop O(N)</span>
-              <span class="pill" onclick="loadPreset('io')">File I/O Loop</span>
+          <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span style="font-size: 0.82rem; color: var(--text-muted);">Quick Presets:</span>
+              <div class="preset-pills">
+                <span class="pill" onclick="loadPreset('matrix')">Matrix Multiplication</span>
+                <span class="pill" onclick="loadPreset('loop')">Heavy Loop O(N)</span>
+                <span class="pill" onclick="loadPreset('io')">File I/O Loop</span>
+              </div>
+            </div>
+            <div>
+              <input type="file" id="fileUploadInput" accept=".py" style="display: none;" onchange="handleFileUpload(event)">
+              <button class="pill" onclick="document.getElementById('fileUploadInput').click()" style="cursor: pointer; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload .py File
+              </button>
             </div>
           </div>
 
@@ -133,12 +141,18 @@ print("Processing finished:", process_data())
             </div>
           </div>
 
-          <!-- Hotspot Table Card -->
+          <!-- Hotspot & Line Attribution Card -->
           <div class="card">
-            <div class="card-title">
-              <span><i class="fa-solid fa-fire-flame-curved"></i> Carbon Hotspot Analysis</span>
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <span><i class="fa-solid fa-fire-flame-curved"></i> Carbon Impact Analysis</span>
+              <div class="preset-pills" style="margin-bottom: 0;">
+                <span id="tabViewFunction" class="pill active" onclick="switchImpactView('function')">Function Hotspots</span>
+                <span id="tabViewLine" class="pill" onclick="switchImpactView('line')">Line-by-Line Breakdown</span>
+              </div>
             </div>
-            <div class="table-container">
+
+            <!-- View 1: Function Hotspots -->
+            <div id="functionHotspotContainer" class="table-container">
               <table>
                 <thead>
                   <tr>
@@ -153,6 +167,30 @@ print("Processing finished:", process_data())
                   <tr>
                     <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
                       Run a profiling execution to view function-level carbon hotspots.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- View 2: Line-by-Line Breakdown -->
+            <div id="lineStatsContainer" class="table-container" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 55px;">Line</th>
+                    <th>Source Line Code</th>
+                    <th>Hits</th>
+                    <th>Time</th>
+                    <th>Share %</th>
+                    <th>CO₂</th>
+                    <th>Impact</th>
+                  </tr>
+                </thead>
+                <tbody id="lineStatsTableBody">
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                      Run a profiling execution to view line-by-line carbon impact.
                     </td>
                   </tr>
                 </tbody>

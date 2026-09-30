@@ -5,6 +5,7 @@ from engine.carbon import get_grid_intensity, calculate_emissions
 from engine.hotspot import analyze_hotspots
 from engine.advisor import analyze_code_ast
 from engine.ml_predictor import predict_emissions, extract_features
+from engine.line_attribution import attribute_code_lines
 
 
 class TestEngine(unittest.TestCase):
@@ -65,6 +66,20 @@ def matrix_mult():
         self.assertIn("predicted_time_s", pred)
         self.assertIn("predicted_emissions_g_co2", pred)
         self.assertEqual(pred["complexity_class"], "O(N^2)")
+
+    def test_line_attribution(self):
+        code = """total = 0
+for i in range(500):
+    total += i
+"""
+        res = attribute_code_lines(code, total_emissions_g=1.0)
+        self.assertEqual(res["status"], "ok")
+        self.assertGreaterEqual(len(res["line_stats"]), 3)
+        top_line = res["line_stats"][0]
+        self.assertIn(top_line["lineno"], [2, 3])
+        self.assertGreater(top_line["hits"], 100)
+        self.assertGreater(top_line["share_pct"], 20.0)
+        self.assertGreater(top_line["attributed_co2_g"], 0.0)
 
 
 if __name__ == "__main__":

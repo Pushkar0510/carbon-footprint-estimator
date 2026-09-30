@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.port === '8000' ? '' : 'http://localhost:8000';
 
 // Preset Python Code Snippets
 const PRESETS = {
@@ -107,6 +107,45 @@ async function runProfiling() {
   }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Switch between Function Hotspots and Line-by-Line Breakdown
+function switchImpactView(viewType) {
+  const btnFn = document.getElementById('tabViewFunction');
+  const btnLine = document.getElementById('tabViewLine');
+  const containerFn = document.getElementById('functionHotspotContainer');
+  const containerLine = document.getElementById('lineStatsContainer');
+
+  if (viewType === 'line') {
+    btnLine.classList.add('active');
+    btnFn.classList.remove('active');
+    containerLine.style.display = 'block';
+    containerFn.style.display = 'none';
+  } else {
+    btnFn.classList.add('active');
+    btnLine.classList.remove('active');
+    containerFn.style.display = 'block';
+    containerLine.style.display = 'none';
+  }
+}
+
+// Handle .py File Upload
+async function handleFileUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    document.getElementById('codeEditor').value = content;
+    alert(`File "${file.name}" loaded into editor. Click "Profile Execution" to profile.`);
+  };
+  reader.readAsText(file);
+}
+
 function renderProfileResults(data) {
   const m = data.metrics || {};
   document.getElementById('valEmissions').innerHTML = `${(m.emissions_g_co2 || 0).toFixed(4)} <span style="font-size: 0.9rem;">g CO₂</span>`;
@@ -124,27 +163,47 @@ function renderProfileResults(data) {
 
   document.getElementById('stdoutConsole').innerText = data.stdout || data.stderr || 'No output.';
 
-  // Hotspots
-  const tbody = document.getElementById('hotspotTableBody');
-  tbody.innerHTML = '';
-
+  // 1. Function Hotspots
+  const tbodyFn = document.getElementById('hotspotTableBody');
+  tbodyFn.innerHTML = '';
   const hotspots = data.hotspots || [];
   if (hotspots.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-dim);">No hotspots detected.</td></tr>';
-    return;
+    tbodyFn.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No function hotspots detected.</td></tr>';
+  } else {
+    hotspots.forEach(h => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(h.function)}</strong> <span style="color: var(--text-dim); font-size: 0.75rem;">(${h.filename}:${h.lineno})</span></td>
+        <td>${h.cumtime_s} s</td>
+        <td>${h.contribution_pct}%</td>
+        <td>${h.attributed_co2_g} g</td>
+        <td>${h.is_hotspot ? '<span class="tag-hotspot">HOTSPOT</span>' : '<span style="color: var(--text-muted);">Normal</span>'}</td>
+      `;
+      tbodyFn.appendChild(tr);
+    });
   }
 
-  hotspots.forEach(h => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${h.function}</strong> <span style="color: var(--text-dim); font-size: 0.75rem;">(${h.filename}:${h.lineno})</span></td>
-      <td>${h.cumtime_s} s</td>
-      <td>${h.contribution_pct}%</td>
-      <td>${h.attributed_co2_g} g</td>
-      <td>${h.is_hotspot ? '<span class="tag-hotspot">HOTSPOT</span>' : '<span style="color: var(--text-muted);">Normal</span>'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  // 2. Line-by-Line Breakdown
+  const tbodyLine = document.getElementById('lineStatsTableBody');
+  tbodyLine.innerHTML = '';
+  const lineStats = data.line_stats || [];
+  if (lineStats.length === 0) {
+    tbodyLine.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No line-level stats available.</td></tr>';
+  } else {
+    lineStats.forEach(ls => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span style="font-family: var(--font-code); color: var(--accent-blue); font-weight: 600;">L${ls.lineno}</span></td>
+        <td><code style="font-family: var(--font-code); font-size: 0.8rem; color: #e2e8f0; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">${escapeHtml(ls.content) || '<span style="color: var(--text-dim);">&lt;empty&gt;</span>'}</code></td>
+        <td>${ls.hits}</td>
+        <td>${ls.time_s} s</td>
+        <td><strong>${ls.share_pct}%</strong></td>
+        <td>${ls.attributed_co2_g} g</td>
+        <td>${ls.is_hotspot ? '<span class="tag-hotspot" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #f87171;">LINE HOTSPOT</span>' : '<span style="color: var(--text-dim); font-size: 0.75rem;">Normal</span>'}</td>
+      `;
+      tbodyLine.appendChild(tr);
+    });
+  }
 }
 
 // 2. Load India Grid Data

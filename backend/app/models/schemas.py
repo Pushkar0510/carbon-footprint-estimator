@@ -20,6 +20,16 @@ class HotspotItem(BaseModel):
     is_hotspot: bool
 
 
+class LineStatItem(BaseModel):
+    lineno: int
+    content: str
+    hits: int
+    time_s: float
+    share_pct: float
+    attributed_co2_g: float
+    is_hotspot: bool
+
+
 class MetricsItem(BaseModel):
     execution_time_s: float
     cpu_percent: float
@@ -40,6 +50,7 @@ class ProfileRunResponse(BaseModel):
     timestamp: str
     metrics: MetricsItem
     hotspots: List[HotspotItem]
+    line_stats: Optional[List[LineStatItem]] = []
     stdout: Optional[str] = ""
     stderr: Optional[str] = ""
 

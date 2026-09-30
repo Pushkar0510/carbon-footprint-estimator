@@ -21,7 +21,7 @@ class TestBackendAPI(unittest.TestCase):
         self.assertEqual(response.json(), {"status": "ok"})
 
     def test_profile_run_endpoint(self):
-        code = "x = sum(range(10000))"
+        code = "total = 0\nfor i in range(500):\n    total += i"
         response = self.client.post(
             "/api/profile/run",
             json={"scriptContent": code, "region": "Maharashtra", "projectId": "test_proj"},
@@ -32,6 +32,22 @@ class TestBackendAPI(unittest.TestCase):
         self.assertIn("metrics", data)
         self.assertEqual(data["metrics"]["grid_intensity_g_per_kwh"], 790.0)
         self.assertIn("emissions_g_co2", data["metrics"])
+        self.assertIn("line_stats", data)
+        self.assertGreaterEqual(len(data["line_stats"]), 2)
+
+    def test_profile_file_endpoint(self):
+        file_content = b"total = sum(i * 2 for i in range(1000))\nprint('Done', total)\n"
+        response = self.client.post(
+            "/api/profile/file",
+            files={"file": ("workload.py", file_content, "text/x-python")},
+            data={"region": "Karnataka", "projectId": "file_proj"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "ok")
+        self.assertIn("metrics", data)
+        self.assertEqual(data["metrics"]["grid_intensity_g_per_kwh"], 580.0)
+        self.assertIn("line_stats", data)
 
     def test_grid_states_endpoint(self):
         response = self.client.get("/api/grid/india/states")

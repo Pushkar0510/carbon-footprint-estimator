@@ -34,11 +34,20 @@ app.include_router(intelligence.router, prefix="/api/intelligence", tags=["Green
 app.include_router(intelligence.router, prefix="/api", tags=["ML Prediction"])
 
 
+from fastapi.staticfiles import StaticFiles
+
+# Mount static frontend dashboard
+frontend_dir = os.path.join(PROJECT_ROOT, "frontend")
+if os.path.exists(frontend_dir):
+    app.mount("/dashboard", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+
 @app.get("/")
 def root():
     return {
         "title": "Carbon Footprint Estimator API",
         "status": "online",
+        "dashboard": "/dashboard/",
         "docs": "/docs",
         "default_region": settings.DEFAULT_REGION,
     }
