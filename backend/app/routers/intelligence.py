@@ -1,4 +1,4 @@
-"""Intelligence, AST Green Advisor, and ML Prediction router."""
+"""Intelligence, AST/Structural Green Advisor, and ML Prediction router."""
 from fastapi import APIRouter
 from backend.app.models.schemas import (
     IntelligenceRequest,
@@ -16,17 +16,18 @@ router = APIRouter()
 
 @router.post("/recommend", response_model=IntelligenceResponse)
 def get_recommendations(req: IntelligenceRequest):
-    """Statically analyze Python source code AST and return green code optimization advice."""
-    recs = get_green_code_recommendations(req.codeSnippet)
+    """Analyze source code AST or structure across any language and return green code optimization advice."""
+    recs = get_green_code_recommendations(req.codeSnippet, language=req.language)
     return {"recommendations": recs, "count": len(recs)}
 
 
 @router.post("/predict/emission", response_model=PredictEmissionResponse)
 def predict_emission(req: PredictEmissionRequest):
-    """Predict execution runtime, energy, and emissions using AST features before execution."""
+    """Predict execution runtime, energy, and emissions using structural features before execution across any language."""
     res = predict_code_emissions(
         code_snippet=req.codeSnippet,
         expected_input_size=req.expectedInputSize or 1000,
         region=req.region,
+        language=req.language,
     )
     return res

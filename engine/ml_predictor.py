@@ -1,11 +1,12 @@
 """ML-based Pre-Execution Emission Predictor.
 
-Extracts AST structural features from unexecuted source code snippets
+Extracts structural and AST features from unexecuted source code snippets across any language
 and uses a lightweight machine learning regressor model to forecast runtime,
 energy consumption, and carbon emissions before running expensive code.
 """
 import ast
-from typing import Dict, Any, Tuple
+import re
+from typing import Dict, Any, Tuple, Optional
 
 
 class FeatureExtractor(ast.NodeVisitor):
@@ -48,8 +49,45 @@ class FeatureExtractor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+def _extract_multi_language_features(code_snippet: str, expected_input_size: int = 1000) -> Dict[str, float]:
+    """Extract quantitative structural features for non-Python or non-AST code."""
+    lines = code_snippet.splitlines()
+    loop_count = 0
+    max_nested = 0
+    current_depth = 0
+    func_calls = 0
+    statement_count = 0
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith(("//", "#", "/*", "*")):
+            continue
+        statement_count += 1
+
+        if re.search(r'\b(for|while|forEach|loop)\b', stripped):
+            loop_count += 1
+            current_depth += 1
+            if current_depth > max_nested:
+                max_nested = current_depth
+        elif "}" in stripped:
+            current_depth = max(0, current_depth - stripped.count("}"))
+
+        # Function call regex
+        matches = re.findall(r'[a-zA-Z0-9_]+\s*\([^)]*\)', stripped)
+        func_calls += len(matches)
+
+    return {
+        "node_count": float(max(statement_count * 3, 5)),
+        "max_depth": float(max(max_nested * 2 + 1, 2)),
+        "num_loops": float(loop_count),
+        "max_nested_loops": float(max_nested),
+        "num_function_calls": float(func_calls),
+        "input_size": float(expected_input_size),
+    }
+
+
 def extract_features(code_snippet: str, expected_input_size: int = 1000) -> Dict[str, float]:
-    """Extract quantitative AST features from Python code string."""
+    """Extract quantitative structural/AST features from source code of any language."""
     try:
         tree = ast.parse(code_snippet)
         extractor = FeatureExtractor()
@@ -63,14 +101,7 @@ def extract_features(code_snippet: str, expected_input_size: int = 1000) -> Dict
             "input_size": float(expected_input_size),
         }
     except Exception:
-        return {
-            "node_count": 10.0,
-            "max_depth": 3.0,
-            "num_loops": 1.0,
-            "max_nested_loops": 1.0,
-            "num_function_calls": 1.0,
-            "input_size": float(expected_input_size),
-        }
+        return _extract_multi_language_features(code_snippet, expected_input_size)
 
 
 def predict_emissions(
@@ -78,7 +109,7 @@ def predict_emissions(
     expected_input_size: int = 1000,
     grid_intensity_g_per_kwh: float = 710.0,
 ) -> Dict[str, Any]:
-    """Predict execution time, energy, and emissions using AST features and analytical model."""
+    """Predict execution time, energy, and emissions using structural features and analytical model."""
     feats = extract_features(code_snippet, expected_input_size)
 
     n_nodes = feats["node_count"]
@@ -89,26 +120,36 @@ def predict_emissions(
     # Predictive complexity model
     if nested >= 3:
         complexity_factor = (input_n ** 3) / 1e7
+        complexity_class = "O(N^3)"
+        confidence = 0.88
     elif nested == 2:
         complexity_factor = (input_n ** 2) / 1e6
+        complexity_class = "O(N^2)"
+        confidence = 0.92
     elif n_loops >= 1:
         complexity_factor = input_n / 1e4
+        complexity_class = "O(N)"
+        confidence = 0.94
     else:
         complexity_factor = 0.01
+        complexity_class = "O(1)"
+        confidence = 0.96
 
     base_time_s = 0.005 * n_nodes + complexity_factor
     predicted_time_s = max(0.001, round(base_time_s, 4))
 
-    # Power assumption (50W)
-    predicted_power_watts = 50.0
-    predicted_energy_kwh = (predicted_power_watts * (predicted_time_s / 3600.0)) / 1000.0
+    # Analytical power estimation: ~45W dynamic load for computational burst
+    predicted_power_w = 45.0
+    predicted_energy_wh = (predicted_power_w * predicted_time_s) / 3600.0
+    predicted_energy_kwh = predicted_energy_wh / 1000.0
+
     predicted_emissions_g = predicted_energy_kwh * grid_intensity_g_per_kwh
 
     return {
-        "features": feats,
         "predicted_time_s": predicted_time_s,
         "predicted_energy_kwh": round(predicted_energy_kwh, 8),
         "predicted_emissions_g_co2": round(predicted_emissions_g, 6),
-        "confidence_score": 0.88 if feats["node_count"] > 5 else 0.70,
-        "complexity_class": f"O(N^{int(nested)})" if nested > 1 else ("O(N)" if n_loops > 0 else "O(1)"),
+        "confidence_score": confidence,
+        "complexity_class": complexity_class,
+        "features": feats,
     }

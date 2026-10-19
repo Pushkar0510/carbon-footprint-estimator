@@ -1,4 +1,4 @@
-"""Unit tests for Python profiling & estimation engine."""
+"""Unit tests for multi-language profiling & estimation engine."""
 import unittest
 from engine.energy import calculate_energy_kwh, calculate_cpu_power, calculate_ram_power
 from engine.carbon import get_grid_intensity, calculate_emissions
@@ -6,6 +6,7 @@ from engine.hotspot import analyze_hotspots
 from engine.advisor import analyze_code_ast
 from engine.ml_predictor import predict_emissions, extract_features
 from engine.line_attribution import attribute_code_lines
+from engine.language_support import detect_language, extract_functions_multi_language
 
 
 class TestEngine(unittest.TestCase):
@@ -60,6 +61,40 @@ def matrix_mult():
         patterns = [r["pattern"] for r in recs]
         self.assertIn("High-Complexity Nested Loop", patterns)
 
+    def test_multi_language_advisor_javascript(self):
+        js_code = """function compute() {
+    for (let i = 0; i < 50; i++) {
+        for (let j = 0; j < 50; j++) {
+            console.log(i * j);
+        }
+    }
+}"""
+        recs = analyze_code_ast(js_code, language="javascript")
+        self.assertGreaterEqual(len(recs), 1)
+        patterns = [r["pattern"] for r in recs]
+        self.assertIn("High-Complexity Nested Loop", patterns)
+
+    def test_language_detection(self):
+        self.assertEqual(detect_language(filename="worker.js"), "javascript")
+        self.assertEqual(detect_language(filename="main.cpp"), "cpp")
+        self.assertEqual(detect_language(filename="App.java"), "java")
+        self.assertEqual(detect_language(filename="service.go"), "go")
+        self.assertEqual(detect_language(filename="algo.rs"), "rust")
+        self.assertEqual(detect_language(filename="script.py"), "python")
+        self.assertEqual(detect_language(code="console.log('hi');"), "javascript")
+        self.assertEqual(detect_language(code="public class Main { public static void main(String[] args) {} }"), "java")
+        self.assertEqual(detect_language(code="#include <iostream>\nint main() { return 0; }"), "cpp")
+
+    def test_multi_language_function_extraction(self):
+        js_code = "function calculate() {}\nconst process = () => {};"
+        funcs = extract_functions_multi_language(js_code, "javascript")
+        func_names = [f["function"] for f in funcs]
+        self.assertIn("calculate", func_names)
+
+        cpp_code = "int processMatrix() {\n    return 0;\n}"
+        cpp_funcs = extract_functions_multi_language(cpp_code, "cpp")
+        self.assertIn("processMatrix", [f["function"] for f in cpp_funcs])
+
     def test_ml_predictor(self):
         code = "for i in range(1000):\n    for j in range(1000):\n        s = i * j"
         pred = predict_emissions(code, expected_input_size=1000, grid_intensity_g_per_kwh=790.0)
@@ -80,6 +115,27 @@ for i in range(500):
         self.assertGreater(top_line["hits"], 100)
         self.assertGreater(top_line["share_pct"], 20.0)
         self.assertGreater(top_line["attributed_co2_g"], 0.0)
+
+    def test_line_attribution_javascript(self):
+        js_code = """function sum() {
+    let s = 0;
+    for (let i = 0; i < 200; i++) {
+        s += i;
+    }
+    return s;
+}"""
+        res = attribute_code_lines(js_code, total_emissions_g=0.8, language="javascript")
+        self.assertEqual(res["status"], "ok")
+        self.assertGreaterEqual(len(res["line_stats"]), 4)
+        self.assertGreaterEqual(len(res["function_hotspots"]), 1)
+        self.assertEqual(res["function_hotspots"][0]["function"], "sum")
+
+    def test_line_attribution_handles_system_exit(self):
+        code = """import sys
+sys.exit(0)
+"""
+        res = attribute_code_lines(code, total_emissions_g=0.5)
+        self.assertEqual(res["status"], "ok")
 
 
 if __name__ == "__main__":

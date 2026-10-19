@@ -4,9 +4,10 @@ from typing import Optional, List, Dict, Any
 
 
 class ProfileRunRequest(BaseModel):
-    scriptContent: str = Field(..., description="Python source code to execute and profile")
+    scriptContent: str = Field(..., description="Source code to execute and profile across any language")
     region: Optional[str] = Field("Maharashtra", description="Indian state or region for carbon grid factor")
     projectId: Optional[str] = Field("default", description="Associated project identifier")
+    language: Optional[str] = Field("auto", description="Programming language (auto, python, javascript, cpp, java, etc.)")
 
 
 class HotspotItem(BaseModel):
@@ -48,11 +49,40 @@ class ProfileRunResponse(BaseModel):
     runId: str
     projectId: str
     timestamp: str
+    language: Optional[str] = "python"
+    languageDisplay: Optional[str] = "Python"
+    filename: Optional[str] = "script.py"
     metrics: MetricsItem
     hotspots: List[HotspotItem]
     line_stats: Optional[List[LineStatItem]] = []
     stdout: Optional[str] = ""
     stderr: Optional[str] = ""
+
+
+class FileProfileResult(BaseModel):
+    """Result for a single file within a multi-file profiling batch."""
+    filename: str
+    status: str
+    runId: str
+    language: Optional[str] = None
+    languageDisplay: Optional[str] = None
+    metrics: Optional[MetricsItem] = None
+    hotspots: List[HotspotItem] = []
+    line_stats: List[LineStatItem] = []
+    stdout: Optional[str] = ""
+    stderr: Optional[str] = ""
+    error: Optional[str] = None
+
+
+class MultiFileProfileResponse(BaseModel):
+    """Response for multi-file / folder profiling batch."""
+    status: str = "ok"
+    projectId: str
+    timestamp: str
+    totalFiles: int
+    successCount: int
+    totalEmissionsG: float
+    files: List[FileProfileResult]
 
 
 class StateGridItem(BaseModel):
@@ -82,7 +112,8 @@ class BudgetStatusResponse(BaseModel):
 
 
 class IntelligenceRequest(BaseModel):
-    codeSnippet: str = Field(..., description="Python code to analyze statically for green practices")
+    codeSnippet: str = Field(..., description="Source code to analyze statically for green practices across any language")
+    language: Optional[str] = Field("auto", description="Programming language")
 
 
 class RecommendationItem(BaseModel):
@@ -99,9 +130,10 @@ class IntelligenceResponse(BaseModel):
 
 
 class PredictEmissionRequest(BaseModel):
-    codeSnippet: str = Field(..., description="Python code snippet to predict emissions for")
+    codeSnippet: str = Field(..., description="Source code snippet to predict emissions for across any language")
     expectedInputSize: Optional[int] = Field(1000, description="Estimated input size N")
     region: Optional[str] = Field("Maharashtra", description="Target region for carbon calculation")
+    language: Optional[str] = Field("auto", description="Programming language")
 
 
 class PredictEmissionResponse(BaseModel):

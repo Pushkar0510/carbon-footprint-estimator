@@ -527,3 +527,42 @@ footer {
   font-size: 0.85rem;
   margin-top: 2rem;
 }
+
+/* ─── Pill Active State ─── */
+.pill.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--primary-emerald);
+}
+
+/* ─── Multi-file accordion ─── */
+.mf-accordion-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem;
+  margin: -0.4rem;
+}
+.mf-accordion-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ─── File Chips Bar ─── */
+#fileChipsBar {
+  animation: fadeIn 0.2s ease;
+}
+
+/* ─── Mini metric cards in per-file accordion ─── */
+.mini-metric {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  min-width: 90px;
+}
+
+/* ─── Spinner animation ─── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

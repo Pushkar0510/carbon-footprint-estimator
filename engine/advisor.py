@@ -1,10 +1,13 @@
-"""AST-based Static Green Code Analyzer & Advisor.
+"""AST-based & Structural Static Green Code Analyzer & Advisor.
 
-Examines Python source code AST to detect inefficient code patterns
-and provide actionable sustainability and optimization recommendations.
+Examines Python AST and multi-language source patterns (JavaScript, C, C++, Java, Go, Rust, etc.)
+to detect inefficient code patterns and provide actionable sustainability recommendations.
 """
 import ast
-from typing import List, Dict, Any
+import re
+from typing import List, Dict, Any, Optional
+
+from engine.language_support import detect_language
 
 
 class GreenCodeVisitor(ast.NodeVisitor):
@@ -31,7 +34,6 @@ class GreenCodeVisitor(ast.NodeVisitor):
         # Check for unvectorized numerical loops using range()
         if isinstance(node.iter, ast.Call):
             if isinstance(node.iter.func, ast.Name) and node.iter.func.id == "range":
-                # Inspect loop body for manual numerical accumulation or element operations
                 for stmt in node.body:
                     if isinstance(stmt, ast.AugAssign) and isinstance(stmt.op, (ast.Add, ast.Mult, ast.Sub)):
                         self.recommendations.append({
@@ -66,7 +68,6 @@ class GreenCodeVisitor(ast.NodeVisitor):
         self.in_loop = prev_in_loop
 
     def visit_Call(self, node: ast.Call):
-        # Check for I/O calls inside loops
         if self.in_loop:
             func_name = ""
             if isinstance(node.func, ast.Name):
@@ -86,32 +87,84 @@ class GreenCodeVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def analyze_code_ast(code_snippet: str) -> List[Dict[str, Any]]:
-    """Analyze Python code string using AST visitor and return green code recommendations."""
+def _analyze_multi_language_patterns(code_snippet: str, language: str) -> List[Dict[str, Any]]:
+    """Analyze source code of any language for green code anti-patterns."""
+    lines = code_snippet.splitlines()
+    recs: List[Dict[str, Any]] = []
+    loop_depth = 0
+
+    io_keywords = [
+        "console.log", "printf", "cout", "System.out.println", "System.out.print",
+        "fmt.Println", "fmt.Printf", "puts", "echo", "Write-Host", "FileWriter",
+        "FileOutputStream", "fopen", "fwrite", "fprintf", "fs.writeFileSync",
+    ]
+
+    for idx, raw_line in enumerate(lines):
+        lineno = idx + 1
+        stripped = raw_line.strip()
+
+        # Track braces / loops
+        if re.search(r'\b(for|while|forEach|loop)\b', stripped):
+            loop_depth += 1
+            if loop_depth >= 2:
+                recs.append({
+                    "line": lineno,
+                    "pattern": "High-Complexity Nested Loop",
+                    "severity": "HIGH" if loop_depth >= 3 else "MEDIUM",
+                    "recommendation": f"Nested loop detected (depth {loop_depth}) in {language.capitalize()}. Consider optimizing loop invariants or algorithm complexity.",
+                    "reason": "Nested loops lead to polynomial or exponential CPU cycles, substantially elevating energy consumption and carbon emissions."
+                })
+        elif "}" in stripped:
+            loop_depth = max(0, loop_depth - stripped.count("}"))
+
+        if loop_depth > 0:
+            for io_kw in io_keywords:
+                if io_kw in stripped:
+                    recs.append({
+                        "line": lineno,
+                        "pattern": "I/O Operation inside Loop",
+                        "severity": "HIGH" if any(w in io_kw.lower() for w in ("file", "write")) else "LOW",
+                        "recommendation": f"Repeated I/O statement '{io_kw}' inside loop. Buffer or batch operations outside the loop.",
+                        "reason": "I/O operations block processor execution pipelines and cause CPU cores to remain energized in higher P-states."
+                    })
+                    break
+
+    return recs
+
+
+def analyze_code_ast(code_snippet: str, language: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Analyze source code string using AST visitor or structural analyzer across any language."""
     if not code_snippet.strip():
         return []
 
-    try:
-        tree = ast.parse(code_snippet)
-    except SyntaxError as e:
-        return [{
-            "line": e.lineno or 1,
-            "pattern": "Syntax Error",
-            "severity": "HIGH",
-            "recommendation": "Fix code syntax error before static analysis.",
-            "reason": str(e)
-        }]
+    detected_lang = detect_language(code=code_snippet, explicit_lang=language)
 
-    visitor = GreenCodeVisitor()
-    visitor.visit(tree)
+    # For Python, try AST visitor first
+    if detected_lang == "python":
+        try:
+            tree = ast.parse(code_snippet)
+            visitor = GreenCodeVisitor()
+            visitor.visit(tree)
 
-    # Deduplicate recommendations by (line, pattern)
+            seen = set()
+            unique_recs = []
+            for rec in visitor.recommendations:
+                key = (rec["line"], rec["pattern"])
+                if key not in seen:
+                    seen.add(key)
+                    unique_recs.append(rec)
+            return unique_recs
+        except SyntaxError:
+            # Fall back to multi-language structural pattern analyzer
+            pass
+
+    # Multi-language structural pattern analysis
+    recs = _analyze_multi_language_patterns(code_snippet, detected_lang)
     seen = set()
-    unique_recs = []
-    for rec in visitor.recommendations:
-        key = (rec["line"], rec["pattern"])
+    unique = []
+    for r in recs:
+        key = (r["line"], r["pattern"])
         if key not in seen:
             seen.add(key)
-            unique_recs.append(rec)
-
-    return unique_recs
+            unique.append(r)
+    return unique

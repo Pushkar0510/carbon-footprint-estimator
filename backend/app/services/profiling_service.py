@@ -1,4 +1,4 @@
-"""Profiling service connecting FastAPI router to engine components."""
+"""Profiling service connecting FastAPI router to engine components across all languages."""
 import tempfile
 import os
 import uuid
@@ -8,6 +8,11 @@ from typing import Dict, Any, List, Optional
 from engine.executor import run_script
 from engine.advisor import analyze_code_ast
 from engine.line_attribution import attribute_code_lines
+from engine.language_support import (
+    detect_language,
+    get_default_extension,
+    get_language_name,
+)
 from backend.app.config import settings
 from backend.app.services.budget_service import record_project_emissions
 
@@ -20,14 +25,30 @@ def run_script_from_content(
     region: Optional[str] = None,
     project_id: Optional[str] = None,
     timeout: Optional[int] = None,
+    filename: Optional[str] = None,
+    language: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Write script content to temp file, execute & profile, record budget, and store historical report."""
     effective_region = region or settings.DEFAULT_REGION
     effective_project_id = project_id or settings.DEFAULT_PROJECT_ID
     effective_timeout = timeout or settings.EXECUTION_TIMEOUT_SECONDS
 
-    fd, path = tempfile.mkstemp(prefix="cfe_script_", suffix=".py")
-    os.close(fd)
+    # Detect language
+    detected_lang = detect_language(code=script_content, filename=filename or "", explicit_lang=language)
+    ext = get_default_extension(detected_lang)
+    if filename and os.path.splitext(filename)[1]:
+        ext = os.path.splitext(filename)[1]
+
+    # Create temporary file with appropriate extension
+    # If filename is specified, keep base name prefix for Java / class matching
+    base_prefix = "cfe_script_"
+    if filename:
+        raw_base = os.path.splitext(os.path.basename(filename))[0]
+        if raw_base:
+            base_prefix = f"cfe_{raw_base}_"
+
+    temp_dir = tempfile.mkdtemp(prefix="cfe_dir_")
+    path = os.path.join(temp_dir, f"{base_prefix}{uuid.uuid4().hex[:6]}{ext}")
 
     run_id = f"run-{uuid.uuid4().hex[:8]}"
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -36,8 +57,8 @@ def run_script_from_content(
         with open(path, "w", encoding="utf-8") as f:
             f.write(script_content)
 
-        # Execute script via subprocess executor
-        exec_result = run_script(path, region=effective_region, timeout=effective_timeout)
+        # Execute script via multi-language subprocess executor
+        exec_result = run_script(path, region=effective_region, timeout=effective_timeout, language=detected_lang)
 
         metrics = exec_result.get("metrics", {})
         if not metrics:
@@ -55,17 +76,34 @@ def run_script_from_content(
             }
 
         emissions_g = metrics.get("emissions_g_co2", 0.0)
+        exec_time_s = metrics.get("execution_time_s", 0.05)
 
-        # Run line-level and function-level attribution
-        line_attr = attribute_code_lines(script_content, total_emissions_g=emissions_g)
+        # Run line-level and function-level attribution across any language
+        try:
+            line_attr = attribute_code_lines(
+                script_content,
+                total_emissions_g=emissions_g,
+                language=detected_lang,
+                execution_time_s=exec_time_s,
+            )
+        except Exception as e:
+            line_attr = {
+                "status": "error",
+                "function_hotspots": [],
+                "line_stats": [],
+                "stdout": "",
+                "stderr": str(e),
+            }
+
         hotspots = line_attr.get("function_hotspots", [])
+        display_fname = filename or f"script{ext}"
         if not hotspots:
             hotspots.append({
                 "function": "main_execution",
-                "filename": "script.py",
+                "filename": display_fname,
                 "lineno": 1,
                 "ncalls": 1,
-                "cumtime_s": metrics.get("execution_time_s", 0.0),
+                "cumtime_s": exec_time_s,
                 "contribution_pct": 100.0,
                 "attributed_co2_g": emissions_g,
                 "is_hotspot": True,
@@ -84,6 +122,9 @@ def run_script_from_content(
             "runId": run_id,
             "projectId": effective_project_id,
             "timestamp": timestamp,
+            "language": detected_lang,
+            "languageDisplay": get_language_name(detected_lang),
+            "filename": display_fname,
             "metrics": metrics,
             "hotspots": hotspots,
             "line_stats": line_stats,
@@ -96,7 +137,11 @@ def run_script_from_content(
 
     finally:
         try:
-            os.remove(path)
+            if os.path.exists(path):
+                os.remove(path)
+            if os.path.exists(temp_dir):
+                import shutil
+                shutil.rmtree(temp_dir, ignore_errors=True)
         except OSError:
             pass
 

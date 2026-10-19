@@ -6,20 +6,14 @@
   <title>Carbon Footprint Estimator — Software Codebase Sustainability</title>
   <meta name="description" content="A developer-centric tool for estimating, analyzing, and reducing the carbon footprint of software execution.">
   <link rel="stylesheet" href="style.css">
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <!-- Navbar -->
   <header class="navbar">
     <div class="brand">
-      <div class="brand-icon">
-        <i class="fa-solid fa-leaf"></i>
-      </div>
-      <div>
-        <div class="brand-title">Carbon Footprint Estimator</div>
-      </div>
+      <div class="brand-icon"><i class="fa-solid fa-leaf"></i></div>
+      <div><div class="brand-title">Carbon Footprint Estimator</div></div>
       <span class="brand-tag">FastAPI Engine</span>
     </div>
     <div class="nav-status">
@@ -30,56 +24,54 @@
     </div>
   </header>
 
-  <!-- Main Container -->
   <main class="container">
 
-    <!-- Navigation Tabs -->
     <nav class="tabs">
-      <button class="tab-btn active" onclick="switchTab('profiler')">
-        <i class="fa-solid fa-bolt"></i> Carbon Profiler
-      </button>
-      <button class="tab-btn" onclick="switchTab('grid')">
-        <i class="fa-solid fa-earth-asia"></i> India Grid Factors
-      </button>
-      <button class="tab-btn" onclick="switchTab('budget')">
-        <i class="fa-solid fa-chart-pie"></i> Carbon Budget
-      </button>
-      <button class="tab-btn" onclick="switchTab('advisor')">
-        <i class="fa-solid fa-code"></i> Green Advisor (AST)
-      </button>
-      <button class="tab-btn" onclick="switchTab('ml')">
-        <i class="fa-solid fa-brain"></i> ML Predictor
-      </button>
+      <button class="tab-btn active" onclick="switchTab('profiler')"><i class="fa-solid fa-bolt"></i> Carbon Profiler</button>
+      <button class="tab-btn" onclick="switchTab('grid')"><i class="fa-solid fa-earth-asia"></i> India Grid Factors</button>
+      <button class="tab-btn" onclick="switchTab('budget')"><i class="fa-solid fa-chart-pie"></i> Carbon Budget</button>
+      <button class="tab-btn" onclick="switchTab('advisor')"><i class="fa-solid fa-code"></i> Green Advisor (AST)</button>
+      <button class="tab-btn" onclick="switchTab('ml')"><i class="fa-solid fa-brain"></i> ML Predictor</button>
     </nav>
 
     <!-- Tab 1: Carbon Profiler -->
     <section id="tab-profiler" class="tab-content active">
       <div class="grid-2">
-        
-        <!-- Left: Code Input Card -->
+
+        <!-- Left: Code Input -->
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-terminal"></i> Python Code Executor & Profiler</span>
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+            <span><i class="fa-solid fa-code"></i> Multi-Language Code Executor &amp; Profiler</span>
+            <span id="detectedLangTag" style="display:none;font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#34d399;border-radius:12px;"></span>
           </div>
 
-          <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <span style="font-size: 0.82rem; color: var(--text-muted);">Quick Presets:</span>
+          <div class="editor-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <span style="font-size:0.82rem;color:var(--text-muted);">Quick Presets:</span>
               <div class="preset-pills">
-                <span class="pill" onclick="loadPreset('matrix')">Matrix Multiplication</span>
-                <span class="pill" onclick="loadPreset('loop')">Heavy Loop O(N)</span>
-                <span class="pill" onclick="loadPreset('io')">File I/O Loop</span>
+                <span class="pill active" onclick="loadPreset('python_loop')"><i class="fa-brands fa-python"></i> Python</span>
+                <span class="pill" onclick="loadPreset('js_matrix')"><i class="fa-brands fa-js"></i> JavaScript</span>
+                <span class="pill" onclick="loadPreset('cpp_fib')"><i class="fa-solid fa-c"></i>++</span>
+                <span class="pill" onclick="loadPreset('java_loop')"><i class="fa-brands fa-java"></i> Java</span>
+                <span class="pill" onclick="loadPreset('io_loop')">File I/O</span>
               </div>
             </div>
-            <div>
-              <input type="file" id="fileUploadInput" accept=".py" style="display: none;" onchange="handleFileUpload(event)">
-              <button class="pill" onclick="document.getElementById('fileUploadInput').click()" style="cursor: pointer; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Upload .py File
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <input type="file" id="fileUploadInput" multiple style="display:none;" onchange="handleFileSelect(event)">
+              <input type="file" id="folderUploadInput" webkitdirectory multiple style="display:none;" onchange="handleFileSelect(event)">
+              <button class="pill" onclick="document.getElementById('fileUploadInput').click()" style="cursor:pointer;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#60a5fa;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Files
+              </button>
+              <button class="pill" onclick="document.getElementById('folderUploadInput').click()" style="cursor:pointer;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.4);color:#a78bfa;">
+                <i class="fa-solid fa-folder-open"></i> Upload Folder
               </button>
             </div>
           </div>
 
-          <textarea id="codeEditor" class="code-textarea" spellcheck="false"># Write Python code to profile carbon emissions
+          <!-- File chips bar -->
+          <div id="fileChipsBar" style="display:none;margin:0.6rem 0;flex-wrap:wrap;gap:0.4rem;padding:0.5rem;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid var(--border-color);"></div>
+
+          <textarea id="codeEditor" class="code-textarea" spellcheck="false"># Write code in any language to profile carbon emissions
 import time
 
 def process_data(n=300000):
@@ -91,121 +83,140 @@ def process_data(n=300000):
 print("Processing finished:", process_data())
 </textarea>
 
-          <div class="form-row">
-            <div style="flex: 1;">
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Region Grid Intensity:</label>
-              <select id="regionSelect" class="select-input" style="width: 100%;">
-                <option value="Maharashtra" selected>Maharashtra (790 g CO₂/kWh)</option>
-                <option value="Gujarat">Gujarat (710 g CO₂/kWh)</option>
-                <option value="Tamil Nadu">Tamil Nadu (650 g CO₂/kWh)</option>
-                <option value="Karnataka">Karnataka (580 g CO₂/kWh)</option>
-                <option value="Uttar Pradesh">Uttar Pradesh (820 g CO₂/kWh)</option>
-                <option value="Kerala">Kerala (420 g CO₂/kWh)</option>
+          <div class="form-row" style="margin-top:0.8rem;gap:0.8rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:140px;">
+              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Language:</label>
+              <select id="languageSelect" class="select-input" style="width:100%;">
+                <option value="auto" selected>Auto-Detect (Any Language)</option>
+                <option value="python">Python (.py)</option>
+                <option value="javascript">JavaScript / Node.js (.js)</option>
+                <option value="typescript">TypeScript (.ts)</option>
+                <option value="c">C (.c)</option>
+                <option value="cpp">C++ (.cpp)</option>
+                <option value="java">Java (.java)</option>
+                <option value="go">Go (.go)</option>
+                <option value="rust">Rust (.rs)</option>
+                <option value="bash">Bash / Shell (.sh)</option>
+                <option value="powershell">PowerShell (.ps1)</option>
+                <option value="php">PHP (.php)</option>
+                <option value="ruby">Ruby (.rb)</option>
+                <option value="generic">Other / Generic</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Region Grid Intensity:</label>
+              <select id="regionSelect" class="select-input" style="width:100%;">
+                <option value="Maharashtra" selected>Maharashtra (790 g CO&#8322;/kWh)</option>
+                <option value="Gujarat">Gujarat (710 g CO&#8322;/kWh)</option>
+                <option value="Tamil Nadu">Tamil Nadu (650 g CO&#8322;/kWh)</option>
+                <option value="Karnataka">Karnataka (580 g CO&#8322;/kWh)</option>
+                <option value="Uttar Pradesh">Uttar Pradesh (820 g CO&#8322;/kWh)</option>
+                <option value="Kerala">Kerala (420 g CO&#8322;/kWh)</option>
               </select>
             </div>
             <div>
-              <label style="visibility: hidden; display: block; margin-bottom: 0.3rem;">Run</label>
-              <button class="btn-primary" onclick="runProfiling()">
-                <i class="fa-solid fa-play"></i> Profile Execution
+              <label style="visibility:hidden;display:block;margin-bottom:0.3rem;">Run</label>
+              <button class="btn-primary" id="profileBtn" onclick="runProfileAction()">
+                <i class="fa-solid fa-play" id="profileBtnIcon"></i>
+                <span id="profileBtnLabel">Profile Execution</span>
               </button>
             </div>
           </div>
+
+          <!-- Loading indicator -->
+          <div id="profilingSpinner" style="display:none;margin-top:1rem;text-align:center;padding:0.8rem;color:var(--primary-emerald);font-size:0.9rem;background:rgba(16,185,129,0.06);border-radius:8px;border:1px solid rgba(16,185,129,0.2);">
+            <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:0.5rem;"></i>
+            <span id="spinnerLabel">Profiling...</span>
+          </div>
         </div>
 
-        <!-- Right: Results Dashboard -->
+        <!-- Right: Results -->
         <div>
-          <!-- Key Metrics Grid -->
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-label">Estimated Emissions</div>
-              <div class="metric-value" id="valEmissions">0.000 <span style="font-size: 0.9rem;">g CO₂</span></div>
-              <div class="metric-sub" id="valEmissionsMg">0.000 mg CO₂</div>
-            </div>
 
-            <div class="metric-card blue">
-              <div class="metric-label">Execution Time</div>
-              <div class="metric-value" id="valRuntime">0.000 <span style="font-size: 0.9rem;">s</span></div>
-              <div class="metric-sub" id="valCpu">CPU: 0.0%</div>
-            </div>
-
-            <div class="metric-card purple">
-              <div class="metric-label">Energy Consumed</div>
-              <div class="metric-value" id="valEnergy">0.000 <span style="font-size: 0.9rem;">Wh</span></div>
-              <div class="metric-sub" id="valPower">Power: 0.0 W</div>
-            </div>
-
-            <div class="metric-card amber">
-              <div class="metric-label">Equivalencies</div>
-              <div class="metric-value" id="valEquiv">0.00 <span style="font-size: 0.8rem;">Charges</span></div>
-              <div class="metric-sub" id="valCar">0.00 meters driven</div>
-            </div>
-          </div>
-
-          <!-- Hotspot & Line Attribution Card -->
-          <div class="card">
-            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-              <span><i class="fa-solid fa-fire-flame-curved"></i> Carbon Impact Analysis</span>
-              <div class="preset-pills" style="margin-bottom: 0;">
-                <span id="tabViewFunction" class="pill active" onclick="switchImpactView('function')">Function Hotspots</span>
-                <span id="tabViewLine" class="pill" onclick="switchImpactView('line')">Line-by-Line Breakdown</span>
+          <!-- SINGLE-FILE RESULTS -->
+          <div id="singleFileResults">
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-label">Estimated Emissions</div>
+                <div class="metric-value" id="valEmissions">0.000 <span style="font-size:0.9rem;">g CO&#8322;</span></div>
+                <div class="metric-sub" id="valEmissionsMg">0.000 mg CO&#8322;</div>
+              </div>
+              <div class="metric-card blue">
+                <div class="metric-label">Execution Time</div>
+                <div class="metric-value" id="valRuntime">0.000 <span style="font-size:0.9rem;">s</span></div>
+                <div class="metric-sub" id="valCpu">CPU: 0.0%</div>
+              </div>
+              <div class="metric-card purple">
+                <div class="metric-label">Energy Consumed</div>
+                <div class="metric-value" id="valEnergy">0.000 <span style="font-size:0.9rem;">Wh</span></div>
+                <div class="metric-sub" id="valPower">Power: 0.0 W</div>
+              </div>
+              <div class="metric-card amber">
+                <div class="metric-label">Equivalencies</div>
+                <div class="metric-value" id="valEquiv">0.00 <span style="font-size:0.8rem;">Charges</span></div>
+                <div class="metric-sub" id="valCar">0.00 meters driven</div>
               </div>
             </div>
 
-            <!-- View 1: Function Hotspots -->
-            <div id="functionHotspotContainer" class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Function</th>
-                    <th>Runtime</th>
-                    <th>Share %</th>
-                    <th>CO₂ Contributed</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="hotspotTableBody">
-                  <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
-                      Run a profiling execution to view function-level carbon hotspots.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <div class="card">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                <span style="display:inline-flex;align-items:center;gap:0.5rem;">
+                  <i class="fa-solid fa-fire-flame-curved"></i> Carbon Impact Analysis
+                  <span id="singleResultLangBadge" style="display:none;font-size:0.75rem;padding:0.15rem 0.55rem;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;border-radius:12px;"></span>
+                </span>
+                <div class="preset-pills" style="margin-bottom:0;">
+                  <span id="tabViewFunction" class="pill active" onclick="switchImpactView('function')">Function Hotspots</span>
+                  <span id="tabViewLine" class="pill" onclick="switchImpactView('line')">Line-by-Line Breakdown</span>
+                </div>
+              </div>
 
-            <!-- View 2: Line-by-Line Breakdown -->
-            <div id="lineStatsContainer" class="table-container" style="display: none;">
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width: 55px;">Line</th>
-                    <th>Source Line Code</th>
-                    <th>Hits</th>
-                    <th>Time</th>
-                    <th>Share %</th>
-                    <th>CO₂</th>
-                    <th>Impact</th>
-                  </tr>
-                </thead>
-                <tbody id="lineStatsTableBody">
-                  <tr>
-                    <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
-                      Run a profiling execution to view line-by-line carbon impact.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              <div id="functionHotspotContainer" class="table-container">
+                <table>
+                  <thead><tr><th>Function</th><th>Runtime</th><th>Share %</th><th>CO&#8322; Contributed</th><th>Status</th></tr></thead>
+                  <tbody id="hotspotTableBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:1.5rem;">Run a profiling execution to view function-level carbon hotspots.</td></tr>
+                  </tbody>
+                </table>
+              </div>
 
-            <!-- Console Output -->
-            <div style="margin-top: 1rem;">
-              <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Standard Output (stdout):</span>
-              <pre id="stdoutConsole" style="background: #090d14; border: 1px solid var(--border-color); border-radius: 6px; padding: 0.8rem; font-family: var(--font-code); font-size: 0.82rem; color: #34d399; max-height: 100px; overflow-y: auto;">Run execution output will appear here...</pre>
+              <div id="lineStatsContainer" class="table-container" style="display:none;">
+                <table>
+                  <thead><tr><th style="width:55px;">Line</th><th>Source Code</th><th>Hits</th><th>Time</th><th>Share %</th><th>CO&#8322;</th><th>Impact</th></tr></thead>
+                  <tbody id="lineStatsTableBody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:1.5rem;">Run a profiling execution to view line-by-line carbon impact.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="margin-top:1rem;">
+                <span style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Standard Output (stdout):</span>
+                <pre id="stdoutConsole" style="background:#090d14;border:1px solid var(--border-color);border-radius:6px;padding:0.8rem;font-family:var(--font-code);font-size:0.82rem;color:#34d399;max-height:100px;overflow-y:auto;">Run execution output will appear here...</pre>
+              </div>
             </div>
           </div>
 
-        </div>
+          <!-- MULTI-FILE RESULTS -->
+          <div id="multiFileResults" style="display:none;">
+            <div class="card" style="margin-bottom:1rem;padding:1rem 1.5rem;">
+              <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:center;justify-content:space-between;">
+                <div>
+                  <div class="metric-label" style="margin-bottom:0.2rem;">Total Batch Emissions</div>
+                  <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:700;color:#10b981;" id="mfTotalEmissions">0.000 g CO&#8322;</div>
+                </div>
+                <div>
+                  <div class="metric-label" style="margin-bottom:0.2rem;">Files Profiled</div>
+                  <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:700;color:var(--accent-blue);" id="mfFileCount">0 / 0</div>
+                </div>
+                <div>
+                  <div class="metric-label" style="margin-bottom:0.2rem;">Region</div>
+                  <div style="font-family:var(--font-heading);font-size:1rem;font-weight:600;color:var(--primary-emerald);" id="mfRegion">-</div>
+                </div>
+              </div>
+            </div>
+            <div id="mfFileList"></div>
+          </div>
 
+        </div>
       </div>
     </section>
 
@@ -214,14 +225,10 @@ print("Processing finished:", process_data())
       <div class="card">
         <div class="card-title">
           <span><i class="fa-solid fa-earth-asia"></i> State-wise Electricity Grid Carbon Intensity (India)</span>
-          <span style="font-size: 0.85rem; color: var(--text-muted);">Source: Central Electricity Authority (CEA)</span>
+          <span style="font-size:0.85rem;color:var(--text-muted);">Source: Central Electricity Authority (CEA)</span>
         </div>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-          Grid carbon intensity determines the grams of CO₂ emitted per kWh of electrical energy consumed in each region.
-        </p>
-        <div class="state-cards-grid" id="stateGridContainer">
-          <!-- State cards populated dynamically -->
-        </div>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">Grid carbon intensity determines the grams of CO&#8322; emitted per kWh of electrical energy consumed in each region.</p>
+        <div class="state-cards-grid" id="stateGridContainer"></div>
       </div>
     </section>
 
@@ -229,42 +236,28 @@ print("Processing finished:", process_data())
     <section id="tab-budget" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-sliders"></i> Set Project Carbon Budget</span>
+          <div class="card-title"><span><i class="fa-solid fa-sliders"></i> Set Project Carbon Budget</span></div>
+          <div style="margin-bottom:1.2rem;">
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Project Identifier:</label>
+            <input type="text" id="budgetIdInput" class="select-input" value="default" style="width:100%;">
           </div>
-          <div style="margin-bottom: 1.2rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Project Identifier:</label>
-            <input type="text" id="budgetIdInput" class="select-input" value="default" style="width: 100%;">
+          <div style="margin-bottom:1.2rem;">
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Monthly Limit (grams CO&#8322;):</label>
+            <input type="number" id="budgetLimitInput" class="number-input" value="5000" style="width:100%;">
           </div>
-          <div style="margin-bottom: 1.2rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Monthly Limit (grams CO₂):</label>
-            <input type="number" id="budgetLimitInput" class="number-input" value="5000" style="width: 100%;">
-          </div>
-          <button class="btn-primary" onclick="updateBudget()">
-            <i class="fa-solid fa-save"></i> Save Budget Threshold
-          </button>
+          <button class="btn-primary" onclick="updateBudget()"><i class="fa-solid fa-save"></i> Save Budget Threshold</button>
         </div>
-
         <div class="card">
           <div class="card-title">
             <span><i class="fa-solid fa-chart-pie"></i> Carbon Budget Monitor</span>
             <span id="budgetStatusBadge" class="brand-tag">Within Budget</span>
           </div>
-          
-          <div style="margin: 1.5rem 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-              <span>Monthly Consumption</span>
-              <strong id="budgetUsageLabel">0.00 / 5000.00 g CO₂</strong>
-            </div>
-            <div class="progress-bar-bg">
-              <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: right;" id="budgetPercentLabel">0% Utilized</div>
+          <div style="margin:1.5rem 0;">
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;"><span>Monthly Consumption</span><strong id="budgetUsageLabel">0.00 / 5000.00 g CO&#8322;</strong></div>
+            <div class="progress-bar-bg"><div id="progressBarFill" class="progress-bar-fill" style="width:0%;"></div></div>
+            <div style="font-size:0.8rem;color:var(--text-muted);text-align:right;" id="budgetPercentLabel">0% Utilized</div>
           </div>
-
-          <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
-            <i class="fa-solid fa-circle-info"></i> Automated alerts are triggered when budget utilization reaches 75% or exceeds 100%.
-          </div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.5;"><i class="fa-solid fa-circle-info"></i> Automated alerts are triggered when budget utilization reaches 75% or exceeds 100%.</div>
         </div>
       </div>
     </section>
@@ -273,32 +266,22 @@ print("Processing finished:", process_data())
     <section id="tab-advisor" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-microchip"></i> Static Code Analyzer</span>
-          </div>
-          <textarea id="advisorCodeInput" class="code-textarea" style="height: 260px;" spellcheck="false"># Paste code to analyze for sustainability issues
+          <div class="card-title"><span><i class="fa-solid fa-microchip"></i> Static Code Analyzer</span></div>
+          <textarea id="advisorCodeInput" class="code-textarea" style="height:260px;" spellcheck="false"># Paste code to analyze for sustainability issues
 def calculate_matrix():
-    # Example nested loop & I/O inside loop
     for i in range(100):
         for j in range(100):
             val = i * j
             print("Current value:", val)
 </textarea>
-          <div style="margin-top: 1rem;">
-            <button class="btn-primary" onclick="runGreenAdvisor()">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Green Code Patterns
-            </button>
+          <div style="margin-top:1rem;">
+            <button class="btn-primary" onclick="runGreenAdvisor()"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Green Code Patterns</button>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-list-check"></i> Sustainability Recommendations</span>
-          </div>
+          <div class="card-title"><span><i class="fa-solid fa-list-check"></i> Sustainability Recommendations</span></div>
           <div id="advisorResultsContainer">
-            <p style="color: var(--text-dim); text-align: center; padding: 2rem;">
-              Click "Analyze Green Code Patterns" to inspect AST for energy inefficiencies.
-            </p>
+            <p style="color:var(--text-dim);text-align:center;padding:2rem;">Click "Analyze Green Code Patterns" to inspect AST for energy inefficiencies.</p>
           </div>
         </div>
       </div>
@@ -308,55 +291,33 @@ def calculate_matrix():
     <section id="tab-ml" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-brain"></i> Pre-Execution Emission Predictor</span>
-          </div>
-          <div style="margin-bottom: 1rem;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Code Snippet:</label>
-            <textarea id="mlCodeInput" class="code-textarea" style="height: 180px;" spellcheck="false">for i in range(1000):
+          <div class="card-title"><span><i class="fa-solid fa-brain"></i> Pre-Execution Emission Predictor</span></div>
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Code Snippet:</label>
+            <textarea id="mlCodeInput" class="code-textarea" style="height:180px;" spellcheck="false">for i in range(1000):
     for j in range(1000):
         s = i * j</textarea>
           </div>
-
           <div class="form-row">
-            <div style="flex: 1;">
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Expected Input Size (N):</label>
-              <input type="number" id="mlInputSize" class="number-input" value="1000" style="width: 100%;">
+            <div style="flex:1;">
+              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Expected Input Size (N):</label>
+              <input type="number" id="mlInputSize" class="number-input" value="1000" style="width:100%;">
             </div>
             <div>
-              <label style="visibility: hidden; display: block; margin-bottom: 0.3rem;">Predict</label>
-              <button class="btn-primary" onclick="runMLPrediction()">
-                <i class="fa-solid fa-crystal-ball"></i> Forecast Carbon
-              </button>
+              <label style="visibility:hidden;display:block;margin-bottom:0.3rem;">Predict</label>
+              <button class="btn-primary" onclick="runMLPrediction()"><i class="fa-solid fa-crystal-ball"></i> Forecast Carbon</button>
             </div>
           </div>
         </div>
-
         <div class="card">
-          <div class="card-title">
-            <span><i class="fa-solid fa-chart-line"></i> Forecast Summary</span>
+          <div class="card-title"><span><i class="fa-solid fa-chart-line"></i> Forecast Summary</span></div>
+          <div class="metrics-grid" style="grid-template-columns:1fr 1fr;margin-bottom:1rem;">
+            <div class="metric-card"><div class="metric-label">Predicted CO&#8322;</div><div class="metric-value" id="mlPredCo2">0.000 <span style="font-size:0.8rem;">g</span></div></div>
+            <div class="metric-card blue"><div class="metric-label">Predicted Runtime</div><div class="metric-value" id="mlPredTime">0.000 <span style="font-size:0.8rem;">s</span></div></div>
           </div>
-
-          <div class="metrics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1rem;">
-            <div class="metric-card">
-              <div class="metric-label">Predicted CO₂</div>
-              <div class="metric-value" id="mlPredCo2">0.000 <span style="font-size: 0.8rem;">g</span></div>
-            </div>
-            <div class="metric-card blue">
-              <div class="metric-label">Predicted Runtime</div>
-              <div class="metric-value" id="mlPredTime">0.000 <span style="font-size: 0.8rem;">s</span></div>
-            </div>
-          </div>
-
-          <div style="background: rgba(13, 17, 23, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
-              <span style="color: var(--text-muted);">Algorithmic Complexity:</span>
-              <strong id="mlComplexity" style="color: var(--warning-amber);">O(1)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-              <span style="color: var(--text-muted);">Confidence Score:</span>
-              <strong id="mlConfidence" style="color: var(--primary-emerald);">0.0%</strong>
-            </div>
+          <div style="background:rgba(13,17,23,0.6);border:1px solid var(--border-color);border-radius:8px;padding:1rem;margin-top:1rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:0.5rem;"><span style="color:var(--text-muted);">Algorithmic Complexity:</span><strong id="mlComplexity" style="color:var(--warning-amber);">O(1)</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.9rem;"><span style="color:var(--text-muted);">Confidence Score:</span><strong id="mlConfidence" style="color:var(--primary-emerald);">0.0%</strong></div>
           </div>
         </div>
       </div>
@@ -364,9 +325,7 @@ def calculate_matrix():
 
   </main>
 
-  <footer>
-    Carbon Footprint Estimator for Software Codebases &bull; FastAPI + Python Profiling Engine
-  </footer>
+  <footer>Carbon Footprint Estimator for Software Codebases &bull; FastAPI + Multi-Language Profiling Engine</footer>
 
   <script src="app.js"></script>
 </body>
