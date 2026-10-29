@@ -7,6 +7,7 @@ from engine.advisor import analyze_code_ast
 from engine.ml_predictor import predict_emissions, extract_features
 from engine.line_attribution import attribute_code_lines
 from engine.language_support import detect_language, extract_functions_multi_language
+from engine.llm_predictor import predict_emissions_llm
 
 
 class TestEngine(unittest.TestCase):
@@ -101,6 +102,17 @@ def matrix_mult():
         self.assertIn("predicted_time_s", pred)
         self.assertIn("predicted_emissions_g_co2", pred)
         self.assertEqual(pred["complexity_class"], "O(N^2)")
+
+    def test_llm_predictor(self):
+        code = "for i in range(500):\n    for j in range(500):\n        pass"
+        res = predict_emissions_llm(code, expected_input_size=500, grid_intensity_g_per_kwh=790.0)
+        self.assertIn("predicted_emissions_g_co2", res)
+        self.assertIn("complexity_class", res)
+        self.assertIn("analysis", res)
+        self.assertIn("optimized_code", res)
+        self.assertIn("potential_savings_pct", res)
+        self.assertIn("provider", res)
+
 
     def test_line_attribution(self):
         code = """total = 0

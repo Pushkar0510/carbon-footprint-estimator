@@ -18,7 +18,10 @@ class TestBackendAPI(unittest.TestCase):
     def test_health_check(self):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "ok"})
+        data = response.json()
+        self.assertEqual(data["status"], "ok")
+        self.assertIn("mongo_connected", data)
+
 
     def test_profile_run_endpoint_python(self):
         code = "total = 0\nfor i in range(500):\n    total += i"
@@ -155,7 +158,88 @@ class TestBackendAPI(unittest.TestCase):
         data = response.json()
         self.assertIn("predicted_emissions_g_co2", data)
         self.assertIn("complexity_class", data)
+        self.assertIn("analysis", data)
+        self.assertIn("optimized_code", data)
+        self.assertIn("potential_savings_pct", data)
+        self.assertIn("provider", data)
+
+    def test_auth_status_endpoint(self):
+        response = self.client.get("/api/auth/status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("mongodb_connected", data)
+        self.assertIn("status", data)
+
+    def test_auth_register_login_and_me(self):
+        import uuid
+        uname = f"user_{uuid.uuid4().hex[:8]}"
+        email = f"{uname}@example.com"
+        password = "GreenPassword456!"
+
+        # Register
+        reg_res = self.client.post(
+            "/api/auth/register",
+            json={"username": uname, "email": email, "password": password},
+        )
+        self.assertEqual(reg_res.status_code, 201)
+        reg_data = reg_res.json()
+        self.assertIn("access_token", reg_data)
+        self.assertEqual(reg_data["username"], uname)
+        token = reg_data["access_token"]
+
+
+        # Duplicate register fails
+        dup_res = self.client.post(
+            "/api/auth/register",
+            json={"username": uname, "email": email, "password": password},
+        )
+        self.assertEqual(dup_res.status_code, 400)
+
+        # Login with correct password
+        login_res = self.client.post(
+            "/api/auth/login",
+            json={"username": uname, "password": password},
+        )
+        self.assertEqual(login_res.status_code, 200)
+        login_data = login_res.json()
+        self.assertIn("access_token", login_data)
+
+        # Login with invalid password
+        bad_login = self.client.post(
+            "/api/auth/login",
+            json={"username": uname, "password": "WrongPassword"},
+        )
+        self.assertEqual(bad_login.status_code, 401)
+
+        # GET /api/auth/me with Bearer token
+        me_res = self.client.get(
+            "/api/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(me_res.status_code, 200)
+        me_data = me_res.json()
+        self.assertEqual(me_data["username"], uname)
+        self.assertEqual(me_data["email"], email)
+
+        # GET /api/auth/me without token -> 401
+        unauth_res = self.client.get("/api/auth/me")
+        self.assertEqual(unauth_res.status_code, 401)
+
+        # Authenticated profile run
+        auth_profile = self.client.post(
+            "/api/profile/run",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "scriptContent": "total = sum(i for i in range(100))",
+                "region": "Maharashtra",
+                "projectId": uname,
+            },
+        )
+        self.assertEqual(auth_profile.status_code, 200)
+        prof_data = auth_profile.json()
+        self.assertEqual(prof_data["status"], "ok")
 
 
 if __name__ == "__main__":
     unittest.main()
+

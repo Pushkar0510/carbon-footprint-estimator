@@ -142,4 +142,40 @@ class PredictEmissionResponse(BaseModel):
     predicted_emissions_g_co2: float
     confidence_score: float
     complexity_class: str
-    features: Dict[str, float]
+    analysis: Optional[str] = ""
+    optimized_code: Optional[str] = ""
+    potential_savings_pct: Optional[float] = 0.0
+    optimization_tips: Optional[List[str]] = []
+    provider: Optional[str] = "heuristic"
+    language: Optional[str] = "python"
+    features: Optional[Dict[str, float]] = {}
+
+
+class UserRegisterRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    email: str = Field(..., description="Developer email address")
+    password: str = Field(..., min_length=6, description="Account password")
+
+
+class UserLoginRequest(BaseModel):
+    username: str = Field(..., description="Username or email")
+    password: str = Field(..., description="Account password")
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+    email: str
+    default_project_id: str
+    id: str
+
+
+class UserProfileResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    default_project_id: str
+    role: Optional[str] = "developer"
+
+

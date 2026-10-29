@@ -24,6 +24,8 @@ class Settings:
     DEFAULT_CARBON_BUDGET_G: float = float(os.getenv("DEFAULT_CARBON_BUDGET_G", "5000.0"))
     DEFAULT_POWER_WATTS: float = float(os.getenv("DEFAULT_POWER_WATTS", "50.0"))
     EXECUTION_TIMEOUT_SECONDS: int = int(os.getenv("EXECUTION_TIMEOUT_SECONDS", "30"))
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
 
 settings = Settings()

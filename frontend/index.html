@@ -3,75 +3,466 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carbon Footprint Estimator — Software Codebase Sustainability</title>
-  <meta name="description" content="A developer-centric tool for estimating, analyzing, and reducing the carbon footprint of software execution.">
+  <title>CFE — Carbon Footprint Estimator</title>
+  <meta name="description" content="Developer tool to estimate, analyze, and reduce the carbon footprint of software execution across any language.">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
   <header class="navbar">
-    <div class="brand">
-      <div class="brand-icon"><i class="fa-solid fa-leaf"></i></div>
-      <div><div class="brand-title">Carbon Footprint Estimator</div></div>
-      <span class="brand-tag">FastAPI Engine</span>
-    </div>
-    <div class="nav-status">
-      <div class="status-badge" id="apiStatusBadge">
-        <div class="dot"></div>
-        <span>Backend Connected</span>
+    <div class="brand" onclick="switchTab('overview')" style="cursor:pointer;" title="Go to Dashboard">
+      <div class="brand-icon"><i class="fa-solid fa-terminal"></i></div>
+      <div>
+        <div class="brand-title">Carbon Footprint Estimator</div>
       </div>
+      <span class="brand-tag">v2 / FastAPI</span>
+    </div>
+
+    <div class="nav-status">
+      <div class="status-badge" id="mongoStatusBadge">
+        <div class="dot" id="mongoDot"></div>
+        <span id="mongoStatusText">connecting…</span>
+      </div>
+      <button id="authNavBtn" onclick="handleAuthNavClick()">
+        <i class="fa-regular fa-user" id="authNavIcon"></i>
+        <span id="authNavText">Sign in</span>
+      </button>
     </div>
   </header>
 
   <main class="container">
 
     <nav class="tabs">
-      <button class="tab-btn active" onclick="switchTab('profiler')"><i class="fa-solid fa-bolt"></i> Carbon Profiler</button>
-      <button class="tab-btn" onclick="switchTab('grid')"><i class="fa-solid fa-earth-asia"></i> India Grid Factors</button>
-      <button class="tab-btn" onclick="switchTab('budget')"><i class="fa-solid fa-chart-pie"></i> Carbon Budget</button>
-      <button class="tab-btn" onclick="switchTab('advisor')"><i class="fa-solid fa-code"></i> Green Advisor (AST)</button>
-      <button class="tab-btn" onclick="switchTab('ml')"><i class="fa-solid fa-brain"></i> ML Predictor</button>
+      <button class="tab-btn active" id="tabNav-overview" onclick="switchTab('overview')">
+        <i class="fa-solid fa-compass"></i> Dashboard
+      </button>
+      <button class="tab-btn" id="tabNav-auth" onclick="switchTab('auth')">
+        <i class="fa-solid fa-user-shield"></i> Login / Register
+      </button>
+      <button class="tab-btn" id="tabNav-profiler" onclick="switchTab('profiler')">
+        <i class="fa-solid fa-gauge-high"></i> Profiler
+      </button>
+      <button class="tab-btn" id="tabNav-ml" onclick="switchTab('ml')">
+        <i class="fa-solid fa-microchip"></i> AI Forecast
+      </button>
+      <button class="tab-btn" id="tabNav-grid" onclick="switchTab('grid')">
+        <i class="fa-solid fa-globe"></i> Grid Matrix
+      </button>
+      <button class="tab-btn" id="tabNav-budget" onclick="switchTab('budget')">
+        <i class="fa-solid fa-chart-bar"></i> Budget
+      </button>
+      <button class="tab-btn" id="tabNav-advisor" onclick="switchTab('advisor')">
+        <i class="fa-solid fa-magnifying-glass-chart"></i> Green Advisor
+      </button>
+      <button class="tab-btn" id="tabNav-history" onclick="switchTab('history')">
+        <i class="fa-solid fa-rectangle-history"></i> History
+      </button>
     </nav>
 
-    <!-- Tab 1: Carbon Profiler -->
-    <section id="tab-profiler" class="tab-content active">
-      <div class="grid-2">
+    <!-- ── Tab: Overview Dashboard (3D Three.js & Telemetry) ── -->
+    <section id="tab-overview" class="tab-content active">
 
-        <!-- Left: Code Input -->
-        <div class="card">
-          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-            <span><i class="fa-solid fa-code"></i> Multi-Language Code Executor &amp; Profiler</span>
-            <span id="detectedLangTag" style="display:none;font-size:0.75rem;padding:0.2rem 0.6rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#34d399;border-radius:12px;"></span>
+      <!-- Hero Banner with 3D Globe -->
+      <div class="overview-hero">
+        <div class="hero-left">
+          <div class="pulse-badge">
+            <span class="pulse-dot"></span>
+            Realtime Carbon Observability Engine
           </div>
 
-          <div class="editor-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-              <span style="font-size:0.82rem;color:var(--text-muted);">Quick Presets:</span>
-              <div class="preset-pills">
-                <span class="pill active" onclick="loadPreset('python_loop')"><i class="fa-brands fa-python"></i> Python</span>
-                <span class="pill" onclick="loadPreset('js_matrix')"><i class="fa-brands fa-js"></i> JavaScript</span>
-                <span class="pill" onclick="loadPreset('cpp_fib')"><i class="fa-solid fa-c"></i>++</span>
-                <span class="pill" onclick="loadPreset('java_loop')"><i class="fa-brands fa-java"></i> Java</span>
-                <span class="pill" onclick="loadPreset('io_loop')">File I/O</span>
+          <h1 class="hero-title">
+            Measure, Forecast & Curtail <span class="hero-gradient-text">Software Carbon</span>
+          </h1>
+
+          <p class="hero-lead">
+            Cross-language runtime profiling, Gemini LLM predictive computational complexity modeling, 
+            and India CEA electrical grid intensity accounting built for climate-conscious developers.
+          </p>
+
+          <div class="hero-cta-group">
+            <button class="btn-hero-primary" onclick="switchTab('profiler')">
+              <i class="fa-solid fa-play"></i> Launch Profiler
+            </button>
+            <button class="btn-hero-secondary" onclick="switchTab('ml')">
+              <i class="fa-solid fa-microchip"></i> AI Energy Forecaster
+            </button>
+            <button class="btn-hero-secondary" onclick="switchTab('auth')">
+              <i class="fa-solid fa-key"></i> Account Portal
+            </button>
+          </div>
+        </div>
+
+        <div class="globe-container" id="globeContainerBox">
+          <canvas id="threeGlobeCanvas"></canvas>
+          <div class="globe-hud-overlay">
+            <div class="globe-hud-badge">
+              <i class="fa-solid fa-microchip" style="color:var(--cerulean);"></i>
+              <span id="globeModeLabel">3D Silicon Die &amp; CO&#8322; Cloud</span>
+            </div>
+            <div class="globe-hud-badge" id="globeStatusPill">
+              <span style="color:var(--cerulean);">●</span> <span id="globeStateText">Silicon Active</span>
+            </div>
+          </div>
+          <div class="globe-hud-controls">
+            <button class="globe-btn-mini" id="btnToggle3DMode" onclick="toggle3DSiliconMode()" title="Toggle Eco vs Thermal Surge">
+              <i class="fa-solid fa-fire"></i> Hotspot Surge
+            </button>
+            <button class="globe-btn-mini" onclick="pulseGlobeAnimation()" title="Fire Silicon Execution Trace">
+              <i class="fa-solid fa-bolt"></i> Trace Pulse
+            </button>
+            <button class="globe-btn-mini" onclick="resetGlobeView()" title="Reset Perspective">
+              <i class="fa-solid fa-arrows-rotate"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live KPI Matrix -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">India Grid Intensity</span>
+            <i class="fa-solid fa-bolt kpi-icon"></i>
+          </div>
+          <div class="kpi-val" id="kpiGridAvg">710 <span style="font-size:0.9rem;font-weight:400;color:var(--text-3);">g/kWh</span></div>
+          <div class="kpi-sub up">
+            <i class="fa-solid fa-circle-info"></i> Base: CEA Regional Mix
+          </div>
+        </div>
+
+        <div class="kpi-card accent-rose">
+          <div class="kpi-top">
+            <span class="kpi-label">Hotspot Sensitivity</span>
+            <i class="fa-solid fa-fire kpi-icon" style="color:var(--rose);"></i>
+          </div>
+          <div class="kpi-val" id="kpiHotspotCount">Line & Function</div>
+          <div class="kpi-sub warn">
+            <i class="fa-solid fa-chart-line"></i> Sub-millisecond attributions
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">AI Code Optimizer</span>
+            <i class="fa-solid fa-brain kpi-icon" style="color:var(--cerulean);"></i>
+          </div>
+          <div class="kpi-val">Gemini LLM</div>
+          <div class="kpi-sub up">
+            <i class="fa-solid fa-check"></i> Asymptotic energy analysis
+          </div>
+        </div>
+
+        <div class="kpi-card accent-amber">
+          <div class="kpi-top">
+            <span class="kpi-label">Data Persistence</span>
+            <i class="fa-solid fa-database kpi-icon" style="color:var(--amber);"></i>
+          </div>
+          <div class="kpi-val" id="kpiDbStatus">MongoDB</div>
+          <div class="kpi-sub">
+            <i class="fa-solid fa-shield-halved"></i> Resilient auto-fallback
+          </div>
+        </div>
+      </div>
+
+      <!-- Operational Split: Quick Run & Architecture Feature Cards -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-bolt-lightning"></i> Quick Profile Telemetry</span>
+            <span class="pill" style="cursor:pointer;" onclick="switchTab('profiler')">Open Full Editor <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:1rem;line-height:1.6;">
+            Execute a sample computation instantly or jump to the profiler to drag-and-drop complete folders.
+          </p>
+          <div style="background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem;margin-bottom:1rem;">
+            <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--cerulean);margin-bottom:0.4rem;">
+              // Instant Benchmark Snippet (Python)
+            </div>
+            <pre style="font-size:0.8rem;color:var(--text-2);margin:0;">def quick_calc(n=100000):
+    return sum(i * i for i in range(n))</pre>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button class="btn-primary" onclick="switchTab('profiler'); runProfileAction();">
+              <i class="fa-solid fa-play"></i> Profile This Snippet
+            </button>
+            <button class="pill" onclick="switchTab('advisor')">
+              <i class="fa-solid fa-magnifying-glass"></i> Green Audit
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-layer-group"></i> Architecture Modules</span>
+            <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);">Modular Pipeline</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('grid')">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-globe" style="color:var(--cerulean);"></i>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:var(--text-1);">Regional Grid Matrix</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);font-family:var(--font-mono);">CEA State intensity coefficients</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="color:var(--text-3);font-size:0.8rem;"></i>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('budget')">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-chart-bar" style="color:var(--amber);"></i>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:var(--text-1);">Monthly ESG Budget</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);font-family:var(--font-mono);">Threshold alerts at 75% and 100%</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="color:var(--text-3);font-size:0.8rem;"></i>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('history')">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-database" style="color:var(--rose);"></i>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:var(--text-1);">Persistent MongoDB Ledger</div>
+                  <div style="font-size:0.72rem;color:var(--text-3);font-family:var(--font-mono);">Historical audit trail with energy rating badges</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="color:var(--text-3);font-size:0.8rem;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Tab: Dedicated Auth Page (Login & Signup) ─────── -->
+    <section id="tab-auth" class="tab-content">
+      <div class="auth-split-layout">
+
+        <!-- Left: Interactive Tilt Card -->
+        <div class="auth-card-tilt" id="authCardTiltBox">
+          <div class="auth-card-main">
+            
+            <!-- Mode A: Guest / Form View -->
+            <div id="authPageGuestView">
+              
+              <!-- Interactive Cyber Sentinel Eye -->
+              <div class="cyber-sentinel-wrap">
+                <div class="cyber-sentinel" id="cyberSentinel" title="Biometric Security Sentinel">
+                  <div class="sentinel-pupil" id="sentinelPupil"></div>
+                </div>
+              </div>
+
+              <div class="auth-header-block">
+                <h2 class="auth-page-title" id="authPageTitle">Developer Access Portal</h2>
+                <p class="auth-page-sub">Sign in to isolate carbon footprints, telemetry, and execution runs to your personal account.</p>
+              </div>
+
+              <!-- Quick Helper Row -->
+              <div style="display:flex;justify-content:center;gap:8px;margin-bottom:1rem;">
+                <button type="button" class="quick-fill-btn" onclick="generateRandomHandle()">
+                  <i class="fa-solid fa-dice"></i> Random Handle
+                </button>
+                <button type="button" class="quick-fill-btn" onclick="fillQuickDemoAccount()">
+                  <i class="fa-solid fa-bolt"></i> Quick Demo Fill
+                </button>
+              </div>
+
+              <!-- Mode Switcher -->
+              <div class="auth-mode-switch">
+                <button id="authPageTabLogin" class="auth-mode-btn active" onclick="switchAuthPageMode('login')">
+                  <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+                </button>
+                <button id="authPageTabRegister" class="auth-mode-btn" onclick="switchAuthPageMode('register')">
+                  <i class="fa-solid fa-user-plus"></i> Create Account
+                </button>
+              </div>
+
+              <div id="authPageAlert" style="display:none;padding:0.65rem 0.9rem;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.8rem;margin-bottom:1rem;"></div>
+
+              <form id="authPageForm" onsubmit="handleAuthPageSubmit(event)">
+                <div class="auth-field">
+                  <label for="authPageUsername">Username / Climate Handle</label>
+                  <input type="text" id="authPageUsername" class="auth-input" placeholder="e.g. green_developer" required autocomplete="username" oninput="onUsernameInputChange(this.value)">
+                </div>
+
+                <div class="auth-field" id="authPageEmailGroup" style="display:none;">
+                  <label for="authPageEmail">Email Address</label>
+                  <input type="email" id="authPageEmail" class="auth-input" placeholder="you@climate-tech.org" autocomplete="email" oninput="onEmailInputChange(this.value)">
+                </div>
+
+                <div class="auth-field">
+                  <label for="authPagePassword">Password</label>
+                  <input type="password" id="authPagePassword" class="auth-input" placeholder="••••••••" required autocomplete="current-password" oninput="checkPasswordStrength(this.value)" onfocus="setSentinelShield(true)" onblur="setSentinelShield(false)">
+                </div>
+
+                <!-- Password strength meter & checklist -->
+                <div id="authPasswordStrengthWrap" class="strength-meter-wrap" style="display:none;">
+                  <div class="strength-bars">
+                    <div class="strength-bar" id="strBar1"></div>
+                    <div class="strength-bar" id="strBar2"></div>
+                    <div class="strength-bar" id="strBar3"></div>
+                    <div class="strength-bar" id="strBar4"></div>
+                  </div>
+                  <div class="strength-label">
+                    <span>Cryptographic Entropy</span>
+                    <span id="strengthText">Weak</span>
+                  </div>
+
+                  <!-- Dynamic Checklist -->
+                  <div class="strength-checklist">
+                    <div class="check-item" id="chkLength"><i class="fa-regular fa-circle"></i> &ge; 8 characters</div>
+                    <div class="check-item" id="chkNumber"><i class="fa-regular fa-circle"></i> Has number</div>
+                    <div class="check-item" id="chkCase"><i class="fa-regular fa-circle"></i> Mixed case</div>
+                    <div class="check-item" id="chkSpecial"><i class="fa-regular fa-circle"></i> Special symbol</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:1.4rem;display:flex;flex-direction:column;gap:0.75rem;">
+                  <button type="submit" id="authPageSubmitBtn" class="btn-primary" style="width:100%;justify-content:center;padding:0.75rem;">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+                  </button>
+                  <button type="button" onclick="switchTab('overview')" style="background:none;border:none;color:var(--text-3);font-family:var(--font-mono);font-size:0.8rem;cursor:pointer;padding:0.3rem;text-align:center;">
+                    Continue as Guest Session &rarr;
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Mode B: Authenticated User Profile Hub -->
+            <div id="authPageUserView" style="display:none;" class="auth-profile-hub">
+              <div class="profile-avatar-row">
+                <div class="avatar-circle" id="profileAvatarInitials">CF</div>
+                <div>
+                  <div class="profile-meta-title" id="profileUsername">Authenticated User</div>
+                  <div class="profile-meta-sub" id="profileEmail">user@carbon-estimator.local</div>
+                </div>
+              </div>
+
+              <div class="profile-details-grid">
+                <div class="profile-detail-card">
+                  <label>Isolated Project Scope</label>
+                  <span id="profileProjectScope">default</span>
+                </div>
+                <div class="profile-detail-card">
+                  <label>Database Session</label>
+                  <span id="profileDbState">MongoDB Live</span>
+                </div>
+                <div class="profile-detail-card">
+                  <label>Security Token</label>
+                  <span id="profileTokenState">JWT HS256 Active</span>
+                </div>
+                <div class="profile-detail-card">
+                  <label>Role</label>
+                  <span>Engineer</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+                <button class="btn-primary" onclick="switchTab('profiler')" style="flex:1;justify-content:center;">
+                  <i class="fa-solid fa-play"></i> Open Profiler
+                </button>
+                <button class="pill" onclick="logoutUser()" style="border-color:var(--rose-mid);color:var(--rose);background:var(--rose-dim);padding:0.7rem 1.2rem;">
+                  <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                </button>
               </div>
             </div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+
+          </div>
+        </div>
+
+        <!-- Right: Live Holographic Developer Passport -->
+        <div class="passport-card" id="liveDeveloperPassport">
+          <div class="passport-watermark">CFE</div>
+          <div class="passport-header">
+            <div class="passport-title">
+              <i class="fa-solid fa-seedling" style="color:var(--cerulean);"></i>
+              <span>Carbon Credential ID</span>
+            </div>
+            <div class="passport-chip"></div>
+          </div>
+
+          <div class="passport-body">
+            <div class="passport-avatar" id="passAvatar">
+              <i class="fa-solid fa-terminal"></i>
+            </div>
+            <div class="passport-info">
+              <div class="passport-user" id="passUsername">guest_coder</div>
+              <div class="passport-rank">
+                <i class="fa-solid fa-award"></i>
+                <span id="passRank">Level 1: Carbon Aware</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="passport-metrics-strip">
+            <div class="passport-stat-item">
+              <label>Monthly CO&#8322; Quota</label>
+              <span id="passQuota">5000.0 g</span>
+            </div>
+            <div class="passport-stat-item">
+              <label>Grid Baseline</label>
+              <span id="passGrid">710 g/kWh</span>
+            </div>
+            <div class="passport-stat-item">
+              <label>Execution Scope</label>
+              <span id="passScope">guest_project</span>
+            </div>
+            <div class="passport-stat-item">
+              <label>Cipher</label>
+              <span>JWT-HS256</span>
+            </div>
+          </div>
+
+          <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);line-height:1.5;">
+            Cryptographically tied to your personal execution ledger. All profiler runs and Gemini recommendations are permanently archived in MongoDB.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Tab: Profiler ───────────────────────────── -->
+    <section id="tab-profiler" class="tab-content">
+      <div class="grid-2">
+
+        <!-- Left: Input -->
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-code"></i> Code Input</span>
+            <span id="detectedLangTag" style="display:none;font-family:var(--font-mono);font-size:0.7rem;padding:0.15rem 0.55rem;background:var(--cerulean-dim);border:1px solid var(--cerulean-hi);color:var(--cerulean);border-radius:99px;"></span>
+          </div>
+
+          <!-- Presets & upload row -->
+          <div class="editor-header">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;">Presets</span>
+              <div class="preset-pills">
+                <span class="pill active" onclick="loadPreset('python_loop')"><i class="fa-brands fa-python"></i> Python</span>
+                <span class="pill" onclick="loadPreset('js_matrix')"><i class="fa-brands fa-js"></i> JS</span>
+                <span class="pill" onclick="loadPreset('cpp_fib')">C++</span>
+                <span class="pill" onclick="loadPreset('java_loop')"><i class="fa-brands fa-java"></i> Java</span>
+                <span class="pill" onclick="loadPreset('io_loop')">I/O</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
               <input type="file" id="fileUploadInput" multiple style="display:none;" onchange="handleFileSelect(event)">
               <input type="file" id="folderUploadInput" webkitdirectory multiple style="display:none;" onchange="handleFileSelect(event)">
-              <button class="pill" onclick="document.getElementById('fileUploadInput').click()" style="cursor:pointer;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#60a5fa;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Files
+              <button class="pill" onclick="document.getElementById('fileUploadInput').click()" style="border-color:rgba(0,180,216,0.3);color:var(--cerulean);background:var(--cerulean-dim);">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> Files
               </button>
-              <button class="pill" onclick="document.getElementById('folderUploadInput').click()" style="cursor:pointer;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.4);color:#a78bfa;">
-                <i class="fa-solid fa-folder-open"></i> Upload Folder
+              <button class="pill" onclick="document.getElementById('folderUploadInput').click()" style="border-color:rgba(255,45,120,0.3);color:var(--rose);background:var(--rose-dim);">
+                <i class="fa-solid fa-folder"></i> Folder
               </button>
             </div>
           </div>
 
-          <!-- File chips bar -->
-          <div id="fileChipsBar" style="display:none;margin:0.6rem 0;flex-wrap:wrap;gap:0.4rem;padding:0.5rem;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid var(--border-color);"></div>
+          <!-- File chips -->
+          <div id="fileChipsBar" style="display:none;margin:0.5rem 0;flex-wrap:wrap;gap:5px;padding:0.5rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);"></div>
 
-          <textarea id="codeEditor" class="code-textarea" spellcheck="false"># Write code in any language to profile carbon emissions
+          <div class="code-editor-wrap" id="codeEditorWrap">
+            <textarea id="codeEditor" class="code-textarea" spellcheck="false"># Write code in any language to profile carbon emissions
 import time
 
 def process_data(n=300000):
@@ -80,14 +471,15 @@ def process_data(n=300000):
         total += i * i
     return total
 
-print("Processing finished:", process_data())
-</textarea>
+print("Processing finished:", process_data())</textarea>
+          </div>
 
-          <div class="form-row" style="margin-top:0.8rem;gap:0.8rem;flex-wrap:wrap;">
+          <!-- Controls row -->
+          <div class="form-row" style="flex-wrap:wrap;">
             <div style="flex:1;min-width:140px;">
-              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Language:</label>
-              <select id="languageSelect" class="select-input" style="width:100%;">
-                <option value="auto" selected>Auto-Detect (Any Language)</option>
+              <label>Language</label>
+              <select id="languageSelect" class="select-input">
+                <option value="auto" selected>Auto-Detect</option>
                 <option value="python">Python (.py)</option>
                 <option value="javascript">JavaScript / Node.js (.js)</option>
                 <option value="typescript">TypeScript (.ts)</option>
@@ -96,236 +488,397 @@ print("Processing finished:", process_data())
                 <option value="java">Java (.java)</option>
                 <option value="go">Go (.go)</option>
                 <option value="rust">Rust (.rs)</option>
-                <option value="bash">Bash / Shell (.sh)</option>
+                <option value="bash">Bash (.sh)</option>
                 <option value="powershell">PowerShell (.ps1)</option>
                 <option value="php">PHP (.php)</option>
                 <option value="ruby">Ruby (.rb)</option>
-                <option value="generic">Other / Generic</option>
+                <option value="generic">Other</option>
               </select>
             </div>
             <div style="flex:1;min-width:180px;">
-              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Region Grid Intensity:</label>
-              <select id="regionSelect" class="select-input" style="width:100%;">
-                <option value="Maharashtra" selected>Maharashtra (790 g CO&#8322;/kWh)</option>
-                <option value="Gujarat">Gujarat (710 g CO&#8322;/kWh)</option>
-                <option value="Tamil Nadu">Tamil Nadu (650 g CO&#8322;/kWh)</option>
-                <option value="Karnataka">Karnataka (580 g CO&#8322;/kWh)</option>
-                <option value="Uttar Pradesh">Uttar Pradesh (820 g CO&#8322;/kWh)</option>
-                <option value="Kerala">Kerala (420 g CO&#8322;/kWh)</option>
+              <label>Region / Grid</label>
+              <select id="regionSelect" class="select-input">
+                <option value="Maharashtra" selected>Maharashtra — 790 g/kWh</option>
+                <option value="Gujarat">Gujarat — 710 g/kWh</option>
+                <option value="Tamil Nadu">Tamil Nadu — 650 g/kWh</option>
+                <option value="Karnataka">Karnataka — 580 g/kWh</option>
+                <option value="Uttar Pradesh">Uttar Pradesh — 820 g/kWh</option>
+                <option value="Kerala">Kerala — 420 g/kWh</option>
               </select>
             </div>
             <div>
-              <label style="visibility:hidden;display:block;margin-bottom:0.3rem;">Run</label>
+              <label style="visibility:hidden;">Run</label>
               <button class="btn-primary" id="profileBtn" onclick="runProfileAction()">
                 <i class="fa-solid fa-play" id="profileBtnIcon"></i>
-                <span id="profileBtnLabel">Profile Execution</span>
+                <span id="profileBtnLabel">Run Profile</span>
               </button>
             </div>
           </div>
 
-          <!-- Loading indicator -->
-          <div id="profilingSpinner" style="display:none;margin-top:1rem;text-align:center;padding:0.8rem;color:var(--primary-emerald);font-size:0.9rem;background:rgba(16,185,129,0.06);border-radius:8px;border:1px solid rgba(16,185,129,0.2);">
-            <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:0.5rem;"></i>
-            <span id="spinnerLabel">Profiling...</span>
+          <!-- Spinner -->
+          <div id="profilingSpinner" style="display:none;margin-top:0.9rem;padding:0.65rem 0.9rem;background:var(--cerulean-dim);border:1px solid rgba(0,180,216,0.2);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.8rem;color:var(--cerulean);display:none;align-items:center;gap:8px;">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span id="spinnerLabel">Profiling…</span>
           </div>
         </div>
 
         <!-- Right: Results -->
         <div>
-
-          <!-- SINGLE-FILE RESULTS -->
+          <!-- Single-file results -->
           <div id="singleFileResults">
             <div class="metrics-grid">
               <div class="metric-card">
-                <div class="metric-label">Estimated Emissions</div>
-                <div class="metric-value" id="valEmissions">0.000 <span style="font-size:0.9rem;">g CO&#8322;</span></div>
-                <div class="metric-sub" id="valEmissionsMg">0.000 mg CO&#8322;</div>
+                <div class="metric-label">CO₂ Emissions</div>
+                <div class="metric-value" id="valEmissions">—</div>
+                <div class="metric-sub" id="valEmissionsMg">— mg CO₂</div>
               </div>
               <div class="metric-card blue">
                 <div class="metric-label">Execution Time</div>
-                <div class="metric-value" id="valRuntime">0.000 <span style="font-size:0.9rem;">s</span></div>
-                <div class="metric-sub" id="valCpu">CPU: 0.0%</div>
+                <div class="metric-value" id="valRuntime">—</div>
+                <div class="metric-sub" id="valCpu">CPU: —</div>
               </div>
               <div class="metric-card purple">
-                <div class="metric-label">Energy Consumed</div>
-                <div class="metric-value" id="valEnergy">0.000 <span style="font-size:0.9rem;">Wh</span></div>
-                <div class="metric-sub" id="valPower">Power: 0.0 W</div>
+                <div class="metric-label">Energy</div>
+                <div class="metric-value" id="valEnergy">—</div>
+                <div class="metric-sub" id="valPower">Power: —</div>
               </div>
               <div class="metric-card amber">
                 <div class="metric-label">Equivalencies</div>
-                <div class="metric-value" id="valEquiv">0.00 <span style="font-size:0.8rem;">Charges</span></div>
-                <div class="metric-sub" id="valCar">0.00 meters driven</div>
+                <div class="metric-value" id="valEquiv">—</div>
+                <div class="metric-sub" id="valCar">—</div>
               </div>
             </div>
 
             <div class="card">
-              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-                <span style="display:inline-flex;align-items:center;gap:0.5rem;">
-                  <i class="fa-solid fa-fire-flame-curved"></i> Carbon Impact Analysis
-                  <span id="singleResultLangBadge" style="display:none;font-size:0.75rem;padding:0.15rem 0.55rem;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;border-radius:12px;"></span>
+              <div class="card-title" style="flex-wrap:wrap;gap:0.5rem;">
+                <span style="display:inline-flex;align-items:center;gap:7px;">
+                  <i class="fa-solid fa-fire"></i> Impact Analysis
+                  <span id="singleResultLangBadge" style="display:none;font-family:var(--font-mono);font-size:0.68rem;padding:0.15rem 0.5rem;background:var(--cerulean-dim);border:1px solid var(--cerulean-hi);color:var(--cerulean);border-radius:99px;"></span>
                 </span>
-                <div class="preset-pills" style="margin-bottom:0;">
+                <div class="preset-pills">
                   <span id="tabViewFunction" class="pill active" onclick="switchImpactView('function')">Function Hotspots</span>
-                  <span id="tabViewLine" class="pill" onclick="switchImpactView('line')">Line-by-Line Breakdown</span>
+                  <span id="tabViewLine" class="pill" onclick="switchImpactView('line')">Line-by-Line</span>
                 </div>
               </div>
 
               <div id="functionHotspotContainer" class="table-container">
                 <table>
-                  <thead><tr><th>Function</th><th>Runtime</th><th>Share %</th><th>CO&#8322; Contributed</th><th>Status</th></tr></thead>
+                  <thead><tr>
+                    <th>Function</th><th>Runtime</th><th>Share %</th><th>CO₂</th><th>Status</th>
+                  </tr></thead>
                   <tbody id="hotspotTableBody">
-                    <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:1.5rem;">Run a profiling execution to view function-level carbon hotspots.</td></tr>
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:2rem;font-family:var(--font-mono);font-size:0.8rem;">Run a profile to see function hotspots</td></tr>
                   </tbody>
                 </table>
               </div>
 
               <div id="lineStatsContainer" class="table-container" style="display:none;">
                 <table>
-                  <thead><tr><th style="width:55px;">Line</th><th>Source Code</th><th>Hits</th><th>Time</th><th>Share %</th><th>CO&#8322;</th><th>Impact</th></tr></thead>
+                  <thead><tr>
+                    <th style="width:50px;">#</th><th>Source</th><th>Hits</th><th>Time</th><th>Share</th><th>CO₂</th><th>Impact</th>
+                  </tr></thead>
                   <tbody id="lineStatsTableBody">
-                    <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:1.5rem;">Run a profiling execution to view line-by-line carbon impact.</td></tr>
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:2rem;font-family:var(--font-mono);font-size:0.8rem;">Run a profile to see line breakdown</td></tr>
                   </tbody>
                 </table>
               </div>
 
-              <div style="margin-top:1rem;">
-                <span style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Standard Output (stdout):</span>
-                <pre id="stdoutConsole" style="background:#090d14;border:1px solid var(--border-color);border-radius:6px;padding:0.8rem;font-family:var(--font-code);font-size:0.82rem;color:#34d399;max-height:100px;overflow-y:auto;">Run execution output will appear here...</pre>
+              <div style="margin-top:0.9rem;">
+                <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem;">stdout</div>
+                <pre id="stdoutConsole" style="max-height:90px;overflow-y:auto;">Run output appears here…</pre>
               </div>
             </div>
           </div>
 
-          <!-- MULTI-FILE RESULTS -->
+          <!-- Multi-file results -->
           <div id="multiFileResults" style="display:none;">
-            <div class="card" style="margin-bottom:1rem;padding:1rem 1.5rem;">
+            <div class="card" style="margin-bottom:0.9rem;padding:1.1rem 1.4rem;">
               <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:center;justify-content:space-between;">
                 <div>
-                  <div class="metric-label" style="margin-bottom:0.2rem;">Total Batch Emissions</div>
-                  <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:700;color:#10b981;" id="mfTotalEmissions">0.000 g CO&#8322;</div>
+                  <div class="metric-label">Total Batch Emissions</div>
+                  <div style="font-family:var(--font-ui);font-size:1.6rem;font-weight:700;color:var(--cerulean);" id="mfTotalEmissions">0.000 g CO₂</div>
                 </div>
                 <div>
-                  <div class="metric-label" style="margin-bottom:0.2rem;">Files Profiled</div>
-                  <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:700;color:var(--accent-blue);" id="mfFileCount">0 / 0</div>
+                  <div class="metric-label">Files Profiled</div>
+                  <div style="font-family:var(--font-ui);font-size:1.4rem;font-weight:700;color:var(--text-1);" id="mfFileCount">0 / 0</div>
                 </div>
                 <div>
-                  <div class="metric-label" style="margin-bottom:0.2rem;">Region</div>
-                  <div style="font-family:var(--font-heading);font-size:1rem;font-weight:600;color:var(--primary-emerald);" id="mfRegion">-</div>
+                  <div class="metric-label">Region</div>
+                  <div style="font-family:var(--font-mono);font-size:0.9rem;color:var(--cerulean);" id="mfRegion">—</div>
                 </div>
               </div>
             </div>
             <div id="mfFileList"></div>
           </div>
-
         </div>
       </div>
     </section>
 
-    <!-- Tab 2: India Grid Factors -->
+    <!-- ── Tab: Grid Intensity ────────────────────── -->
     <section id="tab-grid" class="tab-content">
       <div class="card">
         <div class="card-title">
-          <span><i class="fa-solid fa-earth-asia"></i> State-wise Electricity Grid Carbon Intensity (India)</span>
-          <span style="font-size:0.85rem;color:var(--text-muted);">Source: Central Electricity Authority (CEA)</span>
+          <span><i class="fa-solid fa-bolt"></i> State-wise Grid Carbon Intensity — India</span>
+          <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);">Source: CEA</span>
         </div>
-        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">Grid carbon intensity determines the grams of CO&#8322; emitted per kWh of electrical energy consumed in each region.</p>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:1.25rem;line-height:1.6;">
+          Grid carbon intensity (g CO₂/kWh) determines how much carbon your code emits based on the regional electricity mix used during execution.
+        </p>
         <div class="state-cards-grid" id="stateGridContainer"></div>
       </div>
     </section>
 
-    <!-- Tab 3: Carbon Budget -->
+    <!-- ── Tab: Budget ────────────────────────────── -->
     <section id="tab-budget" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title"><span><i class="fa-solid fa-sliders"></i> Set Project Carbon Budget</span></div>
-          <div style="margin-bottom:1.2rem;">
-            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Project Identifier:</label>
-            <input type="text" id="budgetIdInput" class="select-input" value="default" style="width:100%;">
+          <div class="card-title"><span><i class="fa-solid fa-sliders"></i> Budget Configuration</span></div>
+          <div style="margin-bottom:1rem;">
+            <label>Project ID</label>
+            <input type="text" id="budgetIdInput" class="select-input" value="default">
           </div>
-          <div style="margin-bottom:1.2rem;">
-            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.4rem;">Monthly Limit (grams CO&#8322;):</label>
-            <input type="number" id="budgetLimitInput" class="number-input" value="5000" style="width:100%;">
+          <div style="margin-bottom:1.1rem;">
+            <label>Monthly Limit (g CO₂)</label>
+            <input type="number" id="budgetLimitInput" class="number-input" value="5000">
           </div>
-          <button class="btn-primary" onclick="updateBudget()"><i class="fa-solid fa-save"></i> Save Budget Threshold</button>
+          <button class="btn-primary" onclick="updateBudget()"><i class="fa-solid fa-floppy-disk"></i> Save Threshold</button>
         </div>
+
         <div class="card">
           <div class="card-title">
-            <span><i class="fa-solid fa-chart-pie"></i> Carbon Budget Monitor</span>
-            <span id="budgetStatusBadge" class="brand-tag">Within Budget</span>
+            <span><i class="fa-solid fa-chart-bar"></i> Monthly Usage</span>
+            <span id="budgetStatusBadge" style="font-family:var(--font-mono);font-size:0.7rem;padding:0.2rem 0.6rem;border-radius:99px;background:var(--cerulean-dim);color:var(--cerulean);border:1px solid rgba(0,180,216,0.2);">Within Budget</span>
           </div>
-          <div style="margin:1.5rem 0;">
-            <div style="display:flex;justify-content:space-between;font-size:0.9rem;"><span>Monthly Consumption</span><strong id="budgetUsageLabel">0.00 / 5000.00 g CO&#8322;</strong></div>
+          <div style="margin:1.25rem 0;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.2rem;">
+              <span style="color:var(--text-3);font-family:var(--font-mono);">Consumed</span>
+              <strong id="budgetUsageLabel" style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-1);">0.00 / 5000.00 g</strong>
+            </div>
             <div class="progress-bar-bg"><div id="progressBarFill" class="progress-bar-fill" style="width:0%;"></div></div>
-            <div style="font-size:0.8rem;color:var(--text-muted);text-align:right;" id="budgetPercentLabel">0% Utilized</div>
+            <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-3);text-align:right;" id="budgetPercentLabel">0%</div>
           </div>
-          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.5;"><i class="fa-solid fa-circle-info"></i> Automated alerts are triggered when budget utilization reaches 75% or exceeds 100%.</div>
+          <p style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-3);line-height:1.6;">
+            Alerts fire at 75% utilization and again at 100%.
+          </p>
         </div>
       </div>
     </section>
 
-    <!-- Tab 4: Green Advisor (AST) -->
+    <!-- ── Tab: Green Advisor ─────────────────────── -->
     <section id="tab-advisor" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title"><span><i class="fa-solid fa-microchip"></i> Static Code Analyzer</span></div>
-          <textarea id="advisorCodeInput" class="code-textarea" style="height:260px;" spellcheck="false"># Paste code to analyze for sustainability issues
-def calculate_matrix():
+          <div class="card-title"><span><i class="fa-solid fa-magnifying-glass-chart"></i> Static Analyzer</span></div>
+          <div style="margin-bottom:0.5rem;">
+            <label>Language (optional override)</label>
+            <select id="advisorLanguageSelect" class="select-input" style="margin-bottom:0.75rem;">
+              <option value="auto" selected>Auto-detect</option>
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+              <option value="java">Java</option>
+              <option value="cpp">C++</option>
+            </select>
+          </div>
+          <textarea id="advisorCodeInput" class="code-textarea" style="height:250px;" spellcheck="false">def calculate_matrix():
     for i in range(100):
         for j in range(100):
             val = i * j
-            print("Current value:", val)
-</textarea>
-          <div style="margin-top:1rem;">
-            <button class="btn-primary" onclick="runGreenAdvisor()"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Green Code Patterns</button>
+            print("val:", val)</textarea>
+          <div style="margin-top:0.9rem;">
+            <button class="btn-primary" onclick="runGreenAdvisor()"><i class="fa-solid fa-play"></i> Analyze Patterns</button>
           </div>
         </div>
+
         <div class="card">
-          <div class="card-title"><span><i class="fa-solid fa-list-check"></i> Sustainability Recommendations</span></div>
+          <div class="card-title"><span><i class="fa-solid fa-list-check"></i> Sustainability Findings</span></div>
           <div id="advisorResultsContainer">
-            <p style="color:var(--text-dim);text-align:center;padding:2rem;">Click "Analyze Green Code Patterns" to inspect AST for energy inefficiencies.</p>
+            <p style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-3);text-align:center;padding:2.5rem 0;">
+              Run analysis to surface energy-inefficient patterns
+            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Tab 5: ML Predictor -->
+    <!-- ── Tab: AI Intelligence ───────────────────── -->
     <section id="tab-ml" class="tab-content">
       <div class="grid-2">
         <div class="card">
-          <div class="card-title"><span><i class="fa-solid fa-brain"></i> Pre-Execution Emission Predictor</span></div>
-          <div style="margin-bottom:1rem;">
-            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Code Snippet:</label>
-            <textarea id="mlCodeInput" class="code-textarea" style="height:180px;" spellcheck="false">for i in range(1000):
-    for j in range(1000):
-        s = i * j</textarea>
+          <div class="card-title">
+            <span><i class="fa-solid fa-microchip"></i> Emission Forecaster</span>
+            <span id="mlProviderBadge" style="font-family:var(--font-mono);font-size:0.68rem;padding:0.15rem 0.55rem;background:var(--cerulean-dim);border:1px solid var(--cerulean-hi);color:var(--cerulean);border-radius:99px;">Gemini</span>
           </div>
-          <div class="form-row">
-            <div style="flex:1;">
-              <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;">Expected Input Size (N):</label>
-              <input type="number" id="mlInputSize" class="number-input" value="1000" style="width:100%;">
+          <div style="margin-bottom:0.85rem;">
+            <label>Code Snippet (any language)</label>
+            <textarea id="mlCodeInput" class="code-textarea" style="height:220px;" spellcheck="false">def calculate(n=1000):
+    total = 0
+    for i in range(n):
+        for j in range(n):
+            total += i * j
+    return total
+
+print("Result:", calculate())</textarea>
+          </div>
+          <div class="form-row" style="flex-wrap:wrap;gap:0.75rem;">
+            <div style="flex:1;min-width:120px;">
+              <label>Input Size (N)</label>
+              <input type="number" id="mlInputSize" class="number-input" value="1000">
+            </div>
+            <div style="flex:1;min-width:150px;">
+              <label>Target Region</label>
+              <select id="mlRegionSelect" class="select-input">
+                <option value="Maharashtra" selected>Maharashtra</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Kerala">Kerala</option>
+              </select>
             </div>
             <div>
-              <label style="visibility:hidden;display:block;margin-bottom:0.3rem;">Predict</label>
-              <button class="btn-primary" onclick="runMLPrediction()"><i class="fa-solid fa-crystal-ball"></i> Forecast Carbon</button>
+              <label style="visibility:hidden;">Go</label>
+              <button class="btn-primary" id="mlPredictBtn" onclick="runMLPrediction()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Forecast
+              </button>
             </div>
           </div>
         </div>
+
         <div class="card">
-          <div class="card-title"><span><i class="fa-solid fa-chart-line"></i> Forecast Summary</span></div>
-          <div class="metrics-grid" style="grid-template-columns:1fr 1fr;margin-bottom:1rem;">
-            <div class="metric-card"><div class="metric-label">Predicted CO&#8322;</div><div class="metric-value" id="mlPredCo2">0.000 <span style="font-size:0.8rem;">g</span></div></div>
-            <div class="metric-card blue"><div class="metric-label">Predicted Runtime</div><div class="metric-value" id="mlPredTime">0.000 <span style="font-size:0.8rem;">s</span></div></div>
+          <div class="card-title">
+            <span><i class="fa-solid fa-chart-line"></i> Forecast Results</span>
+            <span id="mlSavingsBadge" style="display:none;font-family:var(--font-mono);font-size:0.68rem;padding:0.15rem 0.6rem;background:var(--rose-dim);border:1px solid var(--rose-mid);color:var(--rose);border-radius:99px;"></span>
           </div>
-          <div style="background:rgba(13,17,23,0.6);border:1px solid var(--border-color);border-radius:8px;padding:1rem;margin-top:1rem;">
-            <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:0.5rem;"><span style="color:var(--text-muted);">Algorithmic Complexity:</span><strong id="mlComplexity" style="color:var(--warning-amber);">O(1)</strong></div>
-            <div style="display:flex;justify-content:space-between;font-size:0.9rem;"><span style="color:var(--text-muted);">Confidence Score:</span><strong id="mlConfidence" style="color:var(--primary-emerald);">0.0%</strong></div>
+
+          <div class="metrics-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0.9rem;">
+            <div class="metric-card">
+              <div class="metric-label">Predicted CO₂</div>
+              <div class="metric-value" id="mlPredCo2">—</div>
+            </div>
+            <div class="metric-card blue">
+              <div class="metric-label">Predicted Time</div>
+              <div class="metric-value" id="mlPredTime">—</div>
+            </div>
           </div>
+
+          <div style="background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.85rem;margin-bottom:0.85rem;">
+            <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:0.78rem;margin-bottom:0.4rem;">
+              <span style="color:var(--text-3);">Complexity</span>
+              <strong id="mlComplexity" style="color:var(--cerulean);">O(1)</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:0.78rem;">
+              <span style="color:var(--text-3);">Confidence</span>
+              <strong id="mlConfidence" style="color:var(--text-1);">0%</strong>
+            </div>
+          </div>
+
+          <div id="mlAnalysisSection" style="margin-bottom:0.85rem;">
+            <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">Bottleneck Analysis</div>
+            <div id="mlAnalysisText" style="font-size:0.84rem;color:var(--text-2);background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem;line-height:1.6;">
+              Click Forecast to analyze code with Gemini.
+            </div>
+          </div>
+
+          <div id="mlOptimizedSection" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+              <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;">Refactored Code</div>
+              <button class="pill" onclick="copyOptimizedCode()" style="border-color:var(--cerulean-hi);color:var(--cerulean);background:var(--cerulean-dim);">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+            <pre id="mlOptimizedCodeBox" style="max-height:200px;color:var(--cerulean);"></pre>
+            <div id="mlTipsList" style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-3);margin-top:0.6rem;line-height:1.7;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Tab: History ───────────────────────────── -->
+    <section id="tab-history" class="tab-content">
+      <div class="card">
+        <div class="card-title" style="flex-wrap:wrap;gap:0.5rem;">
+          <span><i class="fa-solid fa-rectangle-history"></i> Execution Run History</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="historyScopeBadge" class="pill" style="font-size:0.7rem;">Guest scope</span>
+            <button class="pill" onclick="fetchRunHistory()" style="border-color:var(--border-2);color:var(--text-2);">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-3);margin-bottom:1.1rem;line-height:1.6;">
+          Every profiled execution is persisted. Sign in to scope history to your personal account.
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Language</th>
+                <th>Time (s)</th>
+                <th>Energy (J)</th>
+                <th>CO₂ (g)</th>
+                <th>Rating</th>
+                <th>Hotspots</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-3);font-family:var(--font-mono);font-size:0.8rem;">
+                  Loading records…
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
 
   </main>
 
-  <footer>Carbon Footprint Estimator for Software Codebases &bull; FastAPI + Multi-Language Profiling Engine</footer>
+  <!-- ── Auth Modal ─────────────────────────────── -->
+  <div id="authModal" class="modal-backdrop" style="display:none;" onclick="handleModalBackdropClick(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span id="authModalTitle">Sign in</span>
+        <button class="modal-close-btn" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-tabs">
+        <button id="authTabLogin" class="modal-tab-btn active" onclick="switchAuthMode('login')">Sign in</button>
+        <button id="authTabRegister" class="modal-tab-btn" onclick="switchAuthMode('register')">Create account</button>
+      </div>
+
+      <div id="authAlert" style="display:none;padding:0.55rem 0.8rem;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.78rem;margin-bottom:0.85rem;"></div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="auth-field">
+          <label for="authUsername">Username</label>
+          <input type="text" id="authUsername" class="auth-input" placeholder="green_coder" required autocomplete="username">
+        </div>
+        <div class="auth-field" id="authEmailGroup" style="display:none;">
+          <label for="authEmail">Email</label>
+          <input type="email" id="authEmail" class="auth-input" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <input type="password" id="authPassword" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <div style="margin-top:1.1rem;display:flex;flex-direction:column;gap:0.55rem;">
+          <button type="submit" id="authSubmitBtn" class="btn-primary" style="width:100%;justify-content:center;">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in
+          </button>
+          <button type="button" onclick="closeAuthModal()" style="background:none;border:none;color:var(--text-3);font-family:var(--font-mono);font-size:0.78rem;cursor:pointer;padding:0.4rem;text-align:center;">
+            Continue as guest
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <footer>
+    Carbon Footprint Estimator · FastAPI engine · Multi-language · MongoDB persistence
+  </footer>
 
   <script src="app.js"></script>
 </body>

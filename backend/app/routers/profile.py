@@ -14,18 +14,30 @@ from backend.app.services.profiling_service import (
     get_profile_run_by_id,
 )
 
+from backend.app.services.auth_service import get_optional_current_user
+from fastapi import Depends
+
 router = APIRouter()
 
 
 @router.post("/run", response_model=ProfileRunResponse)
-def run_profile(req: ProfileRunRequest):
+def run_profile(
+    req: ProfileRunRequest,
+    current_user: Optional[dict] = Depends(get_optional_current_user),
+):
     """Execute submitted code snippet across any language and return detailed energy and carbon profiling report."""
     try:
+        user_id = current_user.get("id") if current_user else None
+        eff_proj = req.projectId
+        if (not eff_proj or eff_proj == "default") and current_user:
+            eff_proj = current_user.get("default_project_id", req.projectId)
+
         report = run_script_from_content(
             script_content=req.scriptContent,
             region=req.region,
-            project_id=req.projectId,
+            project_id=eff_proj,
             language=req.language,
+            user_id=user_id,
         )
         return report
     except Exception as e:
@@ -38,17 +50,24 @@ async def run_file_profile(
     region: Optional[str] = Form("Maharashtra"),
     projectId: Optional[str] = Form("default"),
     language: Optional[str] = Form("auto"),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
 ):
     """Accept an uploaded script file of any language and run carbon footprint profiling."""
     try:
+        user_id = current_user.get("id") if current_user else None
+        eff_proj = projectId
+        if (not eff_proj or eff_proj == "default") and current_user:
+            eff_proj = current_user.get("default_project_id", projectId)
+
         content_bytes = await file.read()
         script_content = content_bytes.decode("utf-8", errors="replace")
         report = run_script_from_content(
             script_content=script_content,
             region=region,
-            project_id=projectId,
+            project_id=eff_proj,
             filename=file.filename,
             language=language,
+            user_id=user_id,
         )
         return report
     except Exception as e:
@@ -60,6 +79,7 @@ async def run_multi_file_profile(
     files: List[UploadFile] = File(...),
     region: Optional[str] = Form("Maharashtra"),
     projectId: Optional[str] = Form("default"),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
 ):
     """Accept multiple code files of any language (or folder contents) and profile each independently.
 
@@ -74,6 +94,11 @@ async def run_multi_file_profile(
     results: List[FileProfileResult] = []
     total_emissions = 0.0
     success_count = 0
+
+    user_id = current_user.get("id") if current_user else None
+    eff_proj = projectId
+    if (not eff_proj or eff_proj == "default") and current_user:
+        eff_proj = current_user.get("default_project_id", projectId)
 
     for upload in files:
         fname = upload.filename or "unknown.txt"
@@ -90,8 +115,9 @@ async def run_multi_file_profile(
             report = run_script_from_content(
                 script_content=script_content,
                 region=region,
-                project_id=projectId,
+                project_id=eff_proj,
                 filename=fname,
+                user_id=user_id,
             )
 
             file_result = FileProfileResult(
@@ -130,16 +156,31 @@ async def run_multi_file_profile(
 
 
 @router.get("/history/{projectId}")
-def get_history(projectId: str):
-    """Get history of carbon profiling runs for a specific project ID."""
-    history = get_profile_history(projectId)
-    return {"projectId": projectId, "runs": history, "count": len(history)}
+async def get_history(
+    projectId: str,
+    current_user: Optional[dict] = Depends(get_optional_current_user),
+):
+    """Get history of carbon profiling runs for a specific project ID or authenticated user."""
+    eff_proj = projectId
+    if eff_proj in ("my", "me") and current_user:
+        eff_proj = current_user.get("default_project_id", "default")
+
+    from backend.app.db.mongodb import db_get_profile_history
+    history = await db_get_profile_history(eff_proj)
+    if not history:
+        history = get_profile_history(eff_proj)
+
+    return {"projectId": eff_proj, "runs": history, "count": len(history)}
 
 
 @router.get("/run/{runId}")
-def get_run_details(runId: str):
+async def get_run_details(runId: str):
     """Get detailed carbon footprint profiling report for a specific run ID."""
-    run = get_profile_run_by_id(runId)
+    from backend.app.db.mongodb import db_get_profile_run_by_id
+    run = await db_get_profile_run_by_id(runId)
+    if not run:
+        run = get_profile_run_by_id(runId)
     if not run:
         raise HTTPException(status_code=404, detail=f"Run with ID '{runId}' not found.")
     return run
+

@@ -27,6 +27,7 @@ def run_script_from_content(
     timeout: Optional[int] = None,
     filename: Optional[str] = None,
     language: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Write script content to temp file, execute & profile, record budget, and store historical report."""
     effective_region = region or settings.DEFAULT_REGION
@@ -40,7 +41,6 @@ def run_script_from_content(
         ext = os.path.splitext(filename)[1]
 
     # Create temporary file with appropriate extension
-    # If filename is specified, keep base name prefix for Java / class matching
     base_prefix = "cfe_script_"
     if filename:
         raw_base = os.path.splitext(os.path.basename(filename))[0]
@@ -121,6 +121,7 @@ def run_script_from_content(
             "status": "ok" if exec_result.get("returncode") == 0 else "error",
             "runId": run_id,
             "projectId": effective_project_id,
+            "userId": user_id,
             "timestamp": timestamp,
             "language": detected_lang,
             "languageDisplay": get_language_name(detected_lang),
@@ -133,6 +134,17 @@ def run_script_from_content(
         }
 
         _RUN_HISTORY.insert(0, report)
+
+        # Async DB save
+        try:
+            import asyncio
+            from backend.app.db.mongodb import db_save_profile_run
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(db_save_profile_run(report))
+        except Exception:
+            pass
+
         return report
 
     finally:
