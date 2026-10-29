@@ -199,7 +199,7 @@
             <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);">Modular Pipeline</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:0.75rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('grid')">
+            <div class="arch-module-item" style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('grid')">
               <div style="display:flex;align-items:center;gap:10px;">
                 <i class="fa-solid fa-globe" style="color:var(--cerulean);"></i>
                 <div>
@@ -210,7 +210,7 @@
               <i class="fa-solid fa-chevron-right" style="color:var(--text-3);font-size:0.8rem;"></i>
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('budget')">
+            <div class="arch-module-item" style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('budget')">
               <div style="display:flex;align-items:center;gap:10px;">
                 <i class="fa-solid fa-chart-bar" style="color:var(--amber);"></i>
                 <div>
@@ -221,7 +221,7 @@
               <i class="fa-solid fa-chevron-right" style="color:var(--text-3);font-size:0.8rem;"></i>
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('history')">
+            <div class="arch-module-item" style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;background:var(--black);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;" onclick="switchTab('history')">
               <div style="display:flex;align-items:center;gap:10px;">
                 <i class="fa-solid fa-database" style="color:var(--rose);"></i>
                 <div>
@@ -769,6 +769,9 @@ print("Result:", calculate())</textarea>
               <span style="color:var(--text-3);">Confidence</span>
               <strong id="mlConfidence" style="color:var(--text-1);">0%</strong>
             </div>
+            <div style="margin-top:6px;height:4px;background:var(--black-4);border-radius:2px;overflow:hidden;">
+              <div id="mlConfidenceBar" class="bar-fill-animated" style="width:0%;height:100%;background:linear-gradient(90deg,var(--cerulean),var(--rose));"></div>
+            </div>
           </div>
 
           <div id="mlAnalysisSection" style="margin-bottom:0.85rem;">
@@ -799,8 +802,8 @@ print("Result:", calculate())</textarea>
           <span><i class="fa-solid fa-rectangle-history"></i> Execution Run History</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span id="historyScopeBadge" class="pill" style="font-size:0.7rem;">Guest scope</span>
-            <button class="pill" onclick="fetchRunHistory()" style="border-color:var(--border-2);color:var(--text-2);">
-              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            <button class="pill" id="historyRefreshBtn" onclick="fetchRunHistory()" style="border-color:var(--border-2);color:var(--text-2);">
+              <i class="fa-solid fa-arrows-rotate" id="historyRefreshIcon"></i> Refresh
             </button>
           </div>
         </div>

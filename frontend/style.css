@@ -201,14 +201,12 @@ body {
 .tab-btn i { font-size: 0.8rem; }
 
 /* ── Tab Content ─────────────────────────────────────── */
-.tab-content { display: none; }
+.tab-content {
+  display: none;
+}
 .tab-content.active {
   display: block;
-  animation: tabSlide 0.18s ease;
-}
-@keyframes tabSlide {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  animation: tabFadeUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ── Grid ────────────────────────────────────────────── */
@@ -1589,13 +1587,21 @@ footer {
   100% { top: 110%; }
 }
 
-/* 5. Indian Grid Card Threat Pulse */
+/* ── Indian Grid Card Threat Pulse & Eco Pulse ──────────────── */
 .grid-threat-pulse {
   animation: threatPulse 2.8s infinite ease-in-out;
 }
 @keyframes threatPulse {
   0%, 100% { border-color: var(--border); box-shadow: none; }
-  50% { border-color: rgba(255,45,120,0.4); box-shadow: 0 0 12px rgba(255,45,120,0.25); }
+  50% { border-color: rgba(255,45,120,0.45); box-shadow: 0 0 14px rgba(255,45,120,0.3); }
+}
+
+.grid-eco-pulse {
+  animation: ecoPulse 3.2s infinite ease-in-out;
+}
+@keyframes ecoPulse {
+  0%, 100% { border-color: var(--border); box-shadow: none; }
+  50% { border-color: rgba(0,180,216,0.45); box-shadow: 0 0 14px rgba(0,180,216,0.25); }
 }
 
 /* 6. Floating Glass Toast Notifications */
@@ -1612,39 +1618,55 @@ footer {
 
 .toast-item {
   pointer-events: auto;
-  background: rgba(14, 14, 18, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(14, 14, 18, 0.96);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border-2);
   border-radius: var(--radius-sm);
   padding: 0.85rem 1.1rem;
   color: var(--text-1);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(0,180,216,0.15);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 15px rgba(0,180,216,0.15);
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 280px;
-  max-width: 400px;
+  max-width: 420px;
   animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   position: relative;
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.toast-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(0,0,0,0.8), 0 0 20px rgba(0,180,216,0.25);
+}
+.toast-item:hover .toast-timer-bar {
+  animation-play-state: paused;
 }
 
 .toast-item.toast-rose {
   border-color: var(--rose-hi);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 18px rgba(255,45,120,0.25);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 18px rgba(255,45,120,0.25);
 }
 
 .toast-item.toast-amber {
   border-color: rgba(245,158,11,0.5);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 18px rgba(245,158,11,0.2);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 18px rgba(245,158,11,0.2);
+}
+
+.toast-item.toast-success {
+  border-color: rgba(16,185,129,0.5);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 18px rgba(16,185,129,0.2);
 }
 
 .toast-icon {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: var(--cerulean);
+  flex-shrink: 0;
 }
 .toast-item.toast-rose .toast-icon { color: var(--rose); }
 .toast-item.toast-amber .toast-icon { color: var(--amber); }
+.toast-item.toast-success .toast-icon { color: #10b981; }
 
 .toast-msg-wrap {
   flex: 1;
@@ -1660,6 +1682,7 @@ footer {
   font-size: 0.72rem;
   color: var(--text-3);
   margin-top: 2px;
+  line-height: 1.4;
 }
 
 .toast-timer-bar {
@@ -1673,14 +1696,266 @@ footer {
 }
 .toast-item.toast-rose .toast-timer-bar { background: var(--rose); }
 .toast-item.toast-amber .toast-timer-bar { background: var(--amber); }
+.toast-item.toast-success .toast-timer-bar { background: #10b981; }
 
 @keyframes toastSlideIn {
-  from { opacity: 0; transform: translateX(40px) scale(0.95); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from { opacity: 0; transform: translateX(50px) scale(0.94); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 @keyframes toastDrain {
   from { width: 100%; }
-  to { width: 0%; }
+  to   { width: 0%; }
+}
+
+/* 7. Metric Cards Entrance & Micro-Interactions */
+.metric-card {
+  animation: metricCardPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s, border-color 0.22s;
+}
+.metric-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cerulean-hi);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.5), 0 0 16px var(--cerulean-dim);
+}
+.metrics-grid .metric-card:nth-child(1) { animation-delay: 0.04s; }
+.metrics-grid .metric-card:nth-child(2) { animation-delay: 0.09s; }
+.metrics-grid .metric-card:nth-child(3) { animation-delay: 0.14s; }
+.metrics-grid .metric-card:nth-child(4) { animation-delay: 0.19s; }
+
+@keyframes metricCardPop {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 8. Table Row Entrance & Micro-Interactions */
+.history-row, tr.hotspot-glow-row, .table-container tbody tr {
+  animation: rowSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.table-container tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.035);
+  transition: background 0.15s ease;
+}
+@keyframes rowSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 9. Dynamic Progress Bar Animation */
+.bar-fill-animated {
+  transition: width 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 10. Indian Grid Card Stagger & Pulse */
+.grid-state-card {
+  animation: cardDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.grid-state-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: var(--cerulean-hi);
+  background: var(--cerulean-dim);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5), 0 0 14px var(--cerulean-dim);
+}
+.grid-state-card.selected {
+  border-color: var(--cerulean) !important;
+  box-shadow: 0 0 18px var(--cerulean-mid), inset 0 0 10px var(--cerulean-dim) !important;
+  background: var(--cerulean-dim) !important;
+}
+@keyframes cardDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 11. Green Advisor Findings Entrance */
+.rec-box {
+  animation: recSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.2s, box-shadow 0.2s, border-left-color 0.2s;
+}
+.rec-box:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+}
+.rec-box.HIGH {
+  animation: recSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both, recPulseHigh 3s infinite ease-in-out;
+}
+@keyframes recSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes recPulseHigh {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 18px rgba(255, 45, 120, 0.3); }
+}
+
+/* 12. Skeleton Loading Shimmer */
+.skeleton-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, var(--black-3) 25%, var(--black-4) 50%, var(--black-3) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-xs);
+  animation: skeletonSweep 1.5s infinite linear;
+}
+@keyframes skeletonSweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 13. AI Forecast Reveal */
+#mlOptimizedSection {
+  animation: codeReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes codeReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 14. Accordion Expand/Collapse */
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+.accordion-content.collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top-color: transparent !important;
+  pointer-events: none;
+}
+
+/* 15. Modal Closing State */
+.modal-backdrop.modal-closing {
+  animation: modalFadeOut 0.2s ease forwards;
+}
+.modal-backdrop.modal-closing .modal-box {
+  animation: modalScaleOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes modalScaleOut {
+  from { transform: scale(1) translateY(0); opacity: 1; }
+  to   { transform: scale(0.95) translateY(10px); opacity: 0; }
+}
+
+/* 16. Cyber Sentinel Eye Micro-Animations */
+.cyber-sentinel {
+  animation: sentinelAura 4s infinite ease-in-out;
+}
+@keyframes sentinelAura {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(0, 180, 216, 0.25), inset 0 0 12px rgba(0, 180, 216, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 180, 216, 0.45), inset 0 0 20px rgba(0, 180, 216, 0.3);
+  }
+}
+.cyber-sentinel.blinking .sentinel-pupil {
+  transform: scaleY(0.08) !important;
+  transition: transform 0.08s ease-in-out !important;
+}
+
+/* 17. Hologram Passport Sheen */
+.passport-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    rgba(0, 180, 216, 0.08) 50%,
+    rgba(255, 45, 120, 0.06) 55%,
+    transparent 65%
+  );
+  transform: rotate(-15deg);
+  pointer-events: none;
+  animation: holoSheen 6s infinite ease-in-out;
+}
+@keyframes holoSheen {
+  0%   { transform: translateY(-80%) rotate(-15deg); }
+  50%  { transform: translateY(60%) rotate(-15deg); }
+  100% { transform: translateY(-80%) rotate(-15deg); }
+}
+
+/* 18. Button Active Micro-Interactions */
+.btn-primary:active,
+.btn-hero-primary:active,
+.btn-hero-secondary:active,
+.pill:active,
+.quick-fill-btn:active,
+.globe-btn-mini:active,
+.modal-tab-btn:active,
+.auth-mode-btn:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.08s ease !important;
+}
+
+/* 19. Status Dot Pulse */
+.status-badge .dot {
+  transition: background-color 0.3s;
+}
+.status-badge .dot.live {
+  animation: statusLivePulse 2.2s infinite ease-in-out;
+}
+@keyframes statusLivePulse {
+  0%, 100% { box-shadow: 0 0 4px var(--cerulean); }
+  50% { box-shadow: 0 0 12px var(--cerulean), 0 0 20px rgba(0, 180, 216, 0.4); }
+}
+
+/* 20. Architecture Module Arrow Nudge */
+.arch-module-item {
+  transition: all 0.2s ease;
+}
+.arch-module-item:hover {
+  border-color: var(--border-2) !important;
+  background: var(--black-3) !important;
+  transform: translateX(4px);
+}
+.arch-module-item:hover .fa-chevron-right {
+  color: var(--cerulean) !important;
+  transform: translateX(3px);
+  transition: transform 0.2s, color 0.2s;
 }
 
 

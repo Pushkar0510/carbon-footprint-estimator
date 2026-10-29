@@ -446,8 +446,24 @@ function resetGlobeView() {
 }
 
 // ─────────────────────────────────────────────
-// INIT
+// INIT & OVERVIEW ANIMATIONS
 // ─────────────────────────────────────────────
+function animateOverviewKPIs() {
+  animateNumberCount('kpiGridAvg', 0, 710, 750, 0, ' g/kWh');
+}
+
+function initSentinelBlinking() {
+  setInterval(() => {
+    const sentinel = document.getElementById('cyberSentinel');
+    if (sentinel && !sentinel.classList.contains('shielded')) {
+      sentinel.classList.add('blinking');
+      setTimeout(() => {
+        sentinel.classList.remove('blinking');
+      }, 150);
+    }
+  }, 4500);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   checkBackendHealth();
   checkDbStatus();
@@ -455,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadGridData();
   fetchBudgetStatus();
   initThreeGlobe();
+  initSentinelBlinking();
 
   // Route according to URL hash if provided
   const hash = (window.location.hash || '').replace('#', '').trim();
@@ -493,6 +510,7 @@ function switchTab(tabId, updateHash = true) {
 
   // Lifecycle hooks for specific views
   if (tabId === 'overview') {
+    animateOverviewKPIs();
     setTimeout(onGlobeResize, 60);
   } else if (tabId === 'history') {
     fetchRunHistory();
@@ -563,19 +581,28 @@ async function checkDbStatus() {
       const data = await res.json();
       isMongoConnectedState = !!data.mongo_connected;
       if (data.mongo_connected) {
-        if (dot) dot.style.backgroundColor = 'var(--cerulean)';
+        if (dot) {
+          dot.style.backgroundColor = 'var(--cerulean)';
+          dot.classList.add('live');
+        }
         if (text) text.innerText = 'MongoDB Connected';
         if (badge) badge.title = 'Live MongoDB replica / instance active';
         if (kpiDb) kpiDb.innerText = 'MongoDB Live';
       } else {
-        if (dot) dot.style.backgroundColor = 'var(--amber)';
+        if (dot) {
+          dot.style.backgroundColor = 'var(--amber)';
+          dot.classList.remove('live');
+        }
         if (text) text.innerText = 'DB: Memory Fallback';
         if (badge) badge.title = 'Running in resilient in-memory mode (MongoDB server offline)';
         if (kpiDb) kpiDb.innerText = 'Memory Mode';
       }
     }
   } catch (err) {
-    if (dot) dot.style.backgroundColor = 'var(--rose)';
+    if (dot) {
+      dot.style.backgroundColor = 'var(--rose)';
+      dot.classList.remove('live');
+    }
     if (text) text.innerText = 'DB Offline';
     if (kpiDb) kpiDb.innerText = 'Offline';
   }
@@ -635,7 +662,7 @@ function handleFileSelect(event) {
   });
 
   if (files.length === 0) {
-    alert('No files found in selection.');
+    showToast('No Files Selected', 'The selection does not contain valid code files.', 'amber');
     return;
   }
 
@@ -871,7 +898,7 @@ function renderProfileResults(data) {
 // ─────────────────────────────────────────────
 function renderMultiFileResults(data, region) {
   document.getElementById('multiFileResults').style.display = '';
-  document.getElementById('mfTotalEmissions').textContent = `${(data.totalEmissionsG || 0).toFixed(4)} g CO\u2082`;
+  animateNumberCount('mfTotalEmissions', 0, data.totalEmissionsG || 0, 700, 4, ' g CO\u2082');
   document.getElementById('mfFileCount').textContent = `${data.successCount} / ${data.totalFiles}`;
   document.getElementById('mfRegion').textContent = region;
 
@@ -888,6 +915,7 @@ function buildFileAccordion(fileResult, idx) {
   const wrapper = document.createElement('div');
   wrapper.className = 'card';
   wrapper.style.marginBottom = '0.85rem';
+  wrapper.style.animation = `cardDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both ${idx * 40}ms`;
 
   const statusColor = fileResult.status === 'ok' ? 'var(--cerulean)' : fileResult.status === 'error' ? 'var(--rose)' : 'var(--text-3)';
   const statusIcon  = fileResult.status === 'ok' ? 'fa-circle-check' : fileResult.status === 'error' ? 'fa-circle-xmark' : 'fa-circle-minus';
@@ -916,11 +944,11 @@ function buildFileAccordion(fileResult, idx) {
           <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-3);">
             <strong style="color:var(--cerulean);">${emissions}</strong> g CO&#8322; &bull; ${runtime}s
           </span>` : ''}
-        <i class="fa-solid fa-chevron-down" id="${headerId}-chevron" style="color:var(--text-3);font-size:0.78rem;transition:transform 0.2s;"></i>
+        <i class="fa-solid fa-chevron-down" id="${headerId}-chevron" style="color:var(--text-3);font-size:0.78rem;transition:transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);"></i>
       </div>
     </div>
 
-    <div id="${bodyId}" style="display:none;margin-top:1.1rem;border-top:1px solid var(--border);padding-top:1rem;">
+    <div id="${bodyId}" class="accordion-content collapsed" style="max-height:0px;display:none;margin-top:1.1rem;border-top:1px solid var(--border);padding-top:1rem;">
       ${m.emissions_g_co2 !== undefined ? `
       <!-- Mini metrics bar -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.55rem;margin-bottom:1rem;">
@@ -974,14 +1002,25 @@ function buildFileAccordion(fileResult, idx) {
 }
 
 function toggleAccordion(bodyId, headerId) {
-
   const body = document.getElementById(bodyId);
   const chevron = document.getElementById(`${headerId}-chevron`);
   if (!body) return;
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
-  if (chevron) {
-    chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  const isCollapsed = body.classList.contains('collapsed') || body.style.display === 'none';
+  if (isCollapsed) {
+    body.style.display = 'block';
+    body.classList.remove('collapsed');
+    body.style.maxHeight = '0px';
+    requestAnimationFrame(() => {
+      body.style.maxHeight = (body.scrollHeight + 60) + 'px';
+    });
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  } else {
+    body.style.maxHeight = '0px';
+    body.classList.add('collapsed');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+    setTimeout(() => {
+      if (body.classList.contains('collapsed')) body.style.display = 'none';
+    }, 360);
   }
 }
 
@@ -992,12 +1031,18 @@ function switchImpactView(view) {
   const isFunc = view === 'function';
   const funcEl = document.getElementById('functionHotspotContainer');
   const lineEl = document.getElementById('lineStatsContainer');
-  if (funcEl) funcEl.style.display = isFunc ? 'block' : 'none';
-  if (lineEl) lineEl.style.display = isFunc ? 'none' : 'block';
+  const activeEl = isFunc ? funcEl : lineEl;
+  const hiddenEl = isFunc ? lineEl : funcEl;
+
+  if (hiddenEl) hiddenEl.style.display = 'none';
+  if (activeEl) {
+    activeEl.style.display = 'block';
+    activeEl.style.animation = 'tabFadeUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  }
+
   document.getElementById('tabViewFunction').className = isFunc ? 'pill active' : 'pill';
   document.getElementById('tabViewLine').className = isFunc ? 'pill' : 'pill active';
 }
-
 
 // ─────────────────────────────────────────────
 // RENDER HOTSPOT TABLE (Safe DOM Construction)
@@ -1012,9 +1057,11 @@ function renderHotspotTable(tbodyId, hotspots) {
     return;
   }
 
-  hotspots.forEach(h => {
+  hotspots.forEach((h, idx) => {
     const tr = document.createElement('tr');
+    tr.style.animationDelay = `${idx * 30}ms`;
     if (h.is_hotspot) tr.className = 'hotspot-glow-row';
+    const pct = Math.min(100, (h.contribution_pct || 0)).toFixed(1);
     tr.innerHTML = `
       <td><strong>${escapeHtml(h.function)}</strong> <span style="color:var(--text-3);font-family:var(--font-mono);font-size:0.75rem;">(${escapeHtml(h.filename || 'script')}:${h.lineno})</span></td>
       <td style="font-family:var(--font-mono);">${h.ncalls != null ? h.ncalls : 1}</td>
@@ -1022,14 +1069,20 @@ function renderHotspotTable(tbodyId, hotspots) {
       <td>
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden;">
-            <div style="width:${Math.min(100, (h.contribution_pct || 0)).toFixed(1)}%;height:100%;background:${h.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
+            <div class="bar-fill-animated" data-width="${pct}%" style="width:0%;height:100%;background:${h.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
           </div>
-          <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:38px;">${(h.contribution_pct || 0).toFixed(1)}%</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:38px;">${pct}%</span>
         </div>
       </td>
       <td><strong style="font-family:var(--font-mono);color:${h.is_hotspot ? 'var(--rose)' : 'var(--text-1)'};">${(h.attributed_co2_g || 0).toFixed(5)}</strong> g</td>
     `;
     tbody.appendChild(tr);
+  });
+
+  requestAnimationFrame(() => {
+    tbody.querySelectorAll('.bar-fill-animated').forEach(bar => {
+      bar.style.width = bar.dataset.width;
+    });
   });
 }
 
@@ -1040,22 +1093,25 @@ function buildHotspotTableHtml(hotspots) {
       <tbody><tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:1.2rem;font-family:var(--font-mono);font-size:0.8rem;">No function hotspots detected.</td></tr></tbody>
     </table>`;
   }
-  const rows = hotspots.map(h => `
-    <tr class="${h.is_hotspot ? 'hotspot-glow-row' : ''}">
-      <td><strong>${escapeHtml(h.function)}</strong> <span style="color:var(--text-3);font-family:var(--font-mono);font-size:0.75rem;">(${escapeHtml(h.filename || 'script')}:${h.lineno})</span></td>
-      <td style="font-family:var(--font-mono);">${h.ncalls != null ? h.ncalls : 1}</td>
-      <td style="font-family:var(--font-mono);">${(h.cumtime_s || 0).toFixed(4)}s</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:0.4rem;">
-          <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:5px;overflow:hidden;">
-            <div style="width:${Math.min(100, (h.contribution_pct || 0)).toFixed(1)}%;height:100%;background:${h.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
+  const rows = hotspots.map((h, idx) => {
+    const pct = Math.min(100, (h.contribution_pct || 0)).toFixed(1);
+    return `
+      <tr class="${h.is_hotspot ? 'hotspot-glow-row' : ''}" style="animation-delay:${idx * 25}ms;">
+        <td><strong>${escapeHtml(h.function)}</strong> <span style="color:var(--text-3);font-family:var(--font-mono);font-size:0.75rem;">(${escapeHtml(h.filename || 'script')}:${h.lineno})</span></td>
+        <td style="font-family:var(--font-mono);">${h.ncalls != null ? h.ncalls : 1}</td>
+        <td style="font-family:var(--font-mono);">${(h.cumtime_s || 0).toFixed(4)}s</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:5px;overflow:hidden;">
+              <div class="bar-fill-animated" style="width:${pct}%;height:100%;background:${h.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
+            </div>
+            <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:36px;">${pct}%</span>
           </div>
-          <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:36px;">${(h.contribution_pct || 0).toFixed(1)}%</span>
-        </div>
-      </td>
-      <td><strong style="font-family:var(--font-mono);color:${h.is_hotspot ? 'var(--rose)' : 'var(--text-1)'};">${(h.attributed_co2_g || 0).toFixed(5)}</strong> g</td>
-    </tr>
-  `).join('');
+        </td>
+        <td><strong style="font-family:var(--font-mono);color:${h.is_hotspot ? 'var(--rose)' : 'var(--text-1)'};">${(h.attributed_co2_g || 0).toFixed(5)}</strong> g</td>
+      </tr>
+    `;
+  }).join('');
 
   return `<table class="carbon-table">
     <thead><tr><th>Function</th><th>Calls</th><th>Time</th><th>Contribution</th><th>Attributed CO&#8322;</th></tr></thead>
@@ -1076,8 +1132,10 @@ function renderLineStatsTable(tbodyId, lineStats) {
     return;
   }
 
-  lineStats.forEach(ls => {
+  lineStats.forEach((ls, idx) => {
     const tr = document.createElement('tr');
+    tr.style.animationDelay = `${idx * 20}ms`;
+    const pct = Math.min(100, (ls.share_pct || 0)).toFixed(1);
     tr.innerHTML = `
       <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-3);">Line ${ls.lineno}</td>
       <td><code style="font-family:var(--font-mono);font-size:0.8rem;color:var(--cerulean);">${escapeHtml(ls.content)}</code></td>
@@ -1085,14 +1143,20 @@ function renderLineStatsTable(tbodyId, lineStats) {
       <td>
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden;">
-            <div style="width:${Math.min(100, (ls.share_pct || 0)).toFixed(1)}%;height:100%;background:${ls.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
+            <div class="bar-fill-animated" data-width="${pct}%" style="width:0%;height:100%;background:${ls.is_hotspot ? 'var(--rose)' : 'var(--cerulean)'};"></div>
           </div>
-          <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:38px;">${(ls.share_pct || 0).toFixed(1)}%</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;min-width:38px;">${pct}%</span>
         </div>
       </td>
       <td><strong style="font-family:var(--font-mono);color:${ls.is_hotspot ? 'var(--rose)' : 'var(--text-1)'};">${(ls.attributed_co2_g || 0).toFixed(6)}</strong> g</td>
     `;
     tbody.appendChild(tr);
+  });
+
+  requestAnimationFrame(() => {
+    tbody.querySelectorAll('.bar-fill-animated').forEach(bar => {
+      bar.style.width = bar.dataset.width;
+    });
   });
 }
 
@@ -1137,18 +1201,35 @@ async function loadGridData() {
     const data = await res.json();
     const states = data.states || {};
     container.innerHTML = '';
-    Object.keys(states).sort().forEach(state => {
+    const sortedStates = Object.keys(states).sort();
+    const regSelect = document.getElementById('regionSelect');
+    const currentRegion = regSelect ? regSelect.value : '';
+
+    sortedStates.forEach((state, idx) => {
       const intensity = states[state];
       const isHigh = intensity > 750;
       const isLow = intensity < 500;
       const badgeClass = isLow ? 'badge-low' : (isHigh ? 'badge-high' : 'badge-med');
+      const pulseClass = isHigh ? 'grid-threat-pulse' : (isLow ? 'grid-eco-pulse' : '');
+      const isSelected = state.toLowerCase() === currentRegion.toLowerCase();
+
       const div = document.createElement('div');
-      div.className = 'grid-state-card';
+      div.className = `grid-state-card ${pulseClass} ${isSelected ? 'selected' : ''}`;
+      div.style.animationDelay = `${idx * 25}ms`;
+      div.title = `Click to set ${state} as active profiling region`;
       div.innerHTML = `
         <div class="state-name">${escapeHtml(state)}</div>
         <div class="state-intensity">${intensity} <span class="unit">g/kWh</span></div>
         <div class="badge ${badgeClass}">${isLow ? 'Low Carbon' : (isHigh ? 'High Carbon' : 'Moderate')}</div>
       `;
+      div.onclick = () => {
+        container.querySelectorAll('.grid-state-card').forEach(c => c.classList.remove('selected'));
+        div.classList.add('selected');
+        if (regSelect) regSelect.value = state;
+        const mlReg = document.getElementById('mlRegionSelect');
+        if (mlReg) mlReg.value = state;
+        showToast('Grid Region Selected', `Active carbon grid updated to ${state} (${intensity} g/kWh)`, 'info');
+      };
       container.appendChild(div);
     });
   } catch (err) {
@@ -1163,7 +1244,7 @@ async function setMonthlyBudget() {
   const inputEl = document.getElementById('budgetLimitInput') || document.getElementById('budgetInput');
   const limit = inputEl ? parseFloat(inputEl.value) : NaN;
   if (!limit || limit <= 0) {
-    alert('Please enter a valid monthly limit greater than 0.');
+    showToast('Validation Error', 'Please enter a valid monthly limit greater than 0.', 'amber');
     return;
   }
   try {
@@ -1176,9 +1257,9 @@ async function setMonthlyBudget() {
     });
     if (!res.ok) throw new Error('Budget update failed');
     fetchBudgetStatus();
-    alert('Carbon budget successfully updated!');
+    showToast('Budget Configured', `Carbon budget threshold configured to ${limit.toFixed(1)} g CO₂`, 'success');
   } catch (err) {
-    alert(err.message);
+    showToast('Budget Error', err.message, 'warn');
   }
 }
 
@@ -1197,13 +1278,19 @@ async function fetchBudgetStatus() {
     const data = await res.json();
 
     const pct = Math.min(100, Math.max(0, data.usagePercent || 0));
-    document.getElementById('budgetUsageLabel').innerText = `${(data.usedGrams || 0).toFixed(2)} / ${(data.monthlyLimitGrams || 5000).toFixed(2)} g CO\u2082`;
-    document.getElementById('budgetPercentLabel').innerText = `${pct.toFixed(1)}% Utilized`;
+    const usedG = data.usedGrams || 0;
+    const limitG = data.monthlyLimitGrams || 5000;
+
+    animateNumberCount('budgetUsageLabel', 0, usedG, 600, 2, ` / ${limitG.toFixed(2)} g CO\u2082`);
+    animateNumberCount('budgetPercentLabel', 0, pct, 600, 1, '% Utilized');
+
     const fill = document.getElementById('progressBarFill');
-    fill.style.width = `${pct}%`;
-    if (pct > 90) fill.style.background = 'var(--rose)';
-    else if (pct > 70) fill.style.background = 'var(--amber)';
-    else fill.style.background = 'var(--cerulean)';
+    if (fill) {
+      fill.style.width = `${pct}%`;
+      if (pct > 90) fill.style.background = 'var(--rose)';
+      else if (pct > 70) fill.style.background = 'var(--amber)';
+      else fill.style.background = 'var(--cerulean)';
+    }
 
     const badge = document.getElementById('budgetStatusBadge');
     if (badge) {
@@ -1212,14 +1299,17 @@ async function fetchBudgetStatus() {
         badge.style.background = 'var(--rose-dim)';
         badge.style.color = 'var(--rose)';
         badge.style.borderColor = 'var(--rose-mid)';
+        badge.classList.add('grid-threat-pulse');
       } else if (data.status === 'warning') {
         badge.style.background = 'var(--amber-dim)';
         badge.style.color = 'var(--amber)';
         badge.style.borderColor = 'rgba(245,158,11,0.3)';
+        badge.classList.remove('grid-threat-pulse');
       } else {
         badge.style.background = 'var(--cerulean-dim)';
         badge.style.color = 'var(--cerulean)';
         badge.style.borderColor = 'var(--cerulean-hi)';
+        badge.classList.remove('grid-threat-pulse');
       }
     }
   } catch (err) {
@@ -1234,6 +1324,25 @@ async function runGreenAdvisor() {
   const code = document.getElementById('advisorCodeInput').value;
   const langSel = document.getElementById('advisorLanguageSelect') || document.getElementById('languageSelect');
   const language = langSel ? langSel.value : 'auto';
+  const container = document.getElementById('advisorResultsContainer');
+
+  if (!code.trim()) {
+    showToast('Input Required', 'Please provide code to analyze for sustainability.', 'amber');
+    return;
+  }
+
+  if (container) {
+    container.innerHTML = `
+      <div class="skeleton-loader">
+        <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--cerulean);margin-bottom:0.4rem;">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> Auditing AST &amp; scanning carbon-intensive patterns...
+        </div>
+        <div class="skeleton-line" style="width:92%;"></div>
+        <div class="skeleton-line" style="width:78%;"></div>
+        <div class="skeleton-line" style="width:86%;"></div>
+      </div>
+    `;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/api/intelligence/recommend`, {
@@ -1243,16 +1352,17 @@ async function runGreenAdvisor() {
     });
     if (!res.ok) throw new Error('Static Analysis failed');
     const data = await res.json();
-    const container = document.getElementById('advisorResultsContainer');
     container.innerHTML = '';
     const recs = data.recommendations || [];
     if (recs.length === 0) {
-      container.innerHTML = '<div style="color:var(--cerulean);text-align:center;padding:2.5rem;"><i class="fa-solid fa-circle-check" style="font-size:1.6rem;margin-bottom:0.5rem;display:block;"></i><span style="font-family:var(--font-mono);font-size:0.82rem;">No carbon-inefficient patterns detected</span></div>';
+      container.innerHTML = '<div style="color:var(--cerulean);text-align:center;padding:2.5rem;animation:tabFadeUp 0.3s ease both;"><i class="fa-solid fa-circle-check" style="font-size:1.8rem;margin-bottom:0.6rem;display:block;"></i><span style="font-family:var(--font-mono);font-size:0.85rem;">No carbon-inefficient patterns detected. Excellent code structure!</span></div>';
+      showToast('Green Audit Passed', 'No energy-inefficient patterns found', 'success');
       return;
     }
-    recs.forEach(r => {
+    recs.forEach((r, idx) => {
       const div = document.createElement('div');
       div.className = `rec-box ${r.severity}`;
+      div.style.animationDelay = `${idx * 50}ms`;
       div.innerHTML = `
         <div class="rec-header">
           <span class="rec-title">${escapeHtml(r.pattern)} (Line ${r.line})</span>
@@ -1263,8 +1373,9 @@ async function runGreenAdvisor() {
       `;
       container.appendChild(div);
     });
+    showToast('Green Audit Complete', `Identified ${recs.length} sustainability recommendation${recs.length === 1 ? '' : 's'}`, 'info');
   } catch (err) {
-    alert(err.message);
+    showToast('Audit Error', err.message, 'warn');
   }
 }
 
@@ -1280,7 +1391,7 @@ async function runMLPrediction() {
   const btn = document.getElementById('mlPredictBtn');
 
   if (!code.trim()) {
-    alert('Please enter a code snippet to forecast and optimize.');
+    showToast('Input Required', 'Please enter a code snippet to forecast and optimize.', 'amber');
     return;
   }
 
@@ -1298,10 +1409,20 @@ async function runMLPrediction() {
     if (!res.ok) throw new Error('AI Emission Prediction failed.');
     const data = await res.json();
 
-    document.getElementById('mlPredCo2').innerHTML = `${(data.predicted_emissions_g_co2 || 0).toFixed(4)} <span style="font-size:0.8rem;">g</span>`;
-    document.getElementById('mlPredTime').innerHTML = `${(data.predicted_time_s || 0).toFixed(4)} <span style="font-size:0.8rem;">s</span>`;
+    const predCo2 = data.predicted_emissions_g_co2 || 0;
+    const predTime = data.predicted_time_s || 0;
+    animateNumberCount('mlPredCo2', 0, predCo2, 700, 4, ' g');
+    animateNumberCount('mlPredTime', 0, predTime, 600, 4, ' s');
     document.getElementById('mlComplexity').innerText = data.complexity_class || 'O(1)';
-    document.getElementById('mlConfidence').innerText = `${((data.confidence_score || 0) * 100).toFixed(0)}%`;
+
+    const confPct = Math.round((data.confidence_score || 0) * 100);
+    animateNumberCount('mlConfidence', 0, confPct, 600, 0, '%');
+    const confBar = document.getElementById('mlConfidenceBar');
+    if (confBar) {
+      requestAnimationFrame(() => {
+        confBar.style.width = `${confPct}%`;
+      });
+    }
 
     // Provider tag
     const providerBadge = document.getElementById('mlProviderBadge');
@@ -1312,6 +1433,7 @@ async function runMLPrediction() {
     // Analysis text
     const analysisEl = document.getElementById('mlAnalysisText');
     if (analysisEl) {
+      analysisEl.style.animation = 'tabFadeUp 0.3s ease both';
       analysisEl.innerHTML = escapeHtml(data.analysis || 'Analysis complete.');
     }
 
@@ -1335,8 +1457,10 @@ async function runMLPrediction() {
         tipsList.innerHTML = data.optimization_tips.map(tip => `<div>&bull; ${escapeHtml(tip)}</div>`).join('');
       }
     }
+
+    showToast('AI Forecast Ready', `Predicted ${predCo2.toFixed(4)} g CO₂ with ${data.complexity_class || 'O(1)'} asymptotic model`, 'info');
   } catch (err) {
-    alert(err.message);
+    showToast('Prediction Failed', err.message, 'warn');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -1349,10 +1473,17 @@ function copyOptimizedCode() {
   const codeBox = document.getElementById('mlOptimizedCodeBox');
   if (!codeBox) return;
   const text = codeBox.textContent;
+  const copyBtn = document.querySelector('button[onclick="copyOptimizedCode()"]');
+
   navigator.clipboard.writeText(text).then(() => {
-    alert('Optimized Green Code copied to clipboard!');
+    if (copyBtn) {
+      const origHtml = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color:#10b981;"></i> Copied!';
+      setTimeout(() => { copyBtn.innerHTML = origHtml; }, 2200);
+    }
+    showToast('Copied to Clipboard', 'Optimized green code copied successfully!', 'success');
   }).catch(() => {
-    alert('Could not copy automatically. Please select and copy manually.');
+    showToast('Copy Error', 'Could not copy automatically. Please copy manually.', 'amber');
   });
 }
 
@@ -1655,8 +1786,19 @@ function showToast(title, desc = '', type = 'info', duration = 3800) {
   }
 
   const toast = document.createElement('div');
-  const typeClass = type === 'warn' ? 'toast-rose' : (type === 'amber' ? 'toast-amber' : '');
-  const icon = type === 'warn' ? 'fa-triangle-exclamation' : (type === 'amber' ? 'fa-circle-exclamation' : 'fa-circle-check');
+  let typeClass = '';
+  let icon = 'fa-circle-info';
+
+  if (type === 'warn' || type === 'rose' || type === 'error') {
+    typeClass = 'toast-rose';
+    icon = 'fa-triangle-exclamation';
+  } else if (type === 'amber') {
+    typeClass = 'toast-amber';
+    icon = 'fa-circle-exclamation';
+  } else if (type === 'success') {
+    typeClass = 'toast-success';
+    icon = 'fa-circle-check';
+  }
 
   toast.className = `toast-item ${typeClass}`;
   toast.innerHTML = `
@@ -1670,14 +1812,32 @@ function showToast(title, desc = '', type = 'info', duration = 3800) {
 
   container.appendChild(toast);
 
-  setTimeout(() => {
-    toast.style.transition = 'opacity 0.25s, transform 0.25s';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(40px)';
-    setTimeout(() => {
-      if (toast.parentElement) toast.remove();
-    }, 260);
-  }, duration);
+  let remainingTime = duration;
+  let timerStart = Date.now();
+  let dismissTimeout = null;
+
+  function startDismissTimer(time) {
+    dismissTimeout = setTimeout(() => {
+      toast.style.transition = 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(40px) scale(0.95)';
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 260);
+    }, time);
+  }
+
+  startDismissTimer(remainingTime);
+
+  toast.addEventListener('mouseenter', () => {
+    clearTimeout(dismissTimeout);
+    remainingTime -= (Date.now() - timerStart);
+  });
+
+  toast.addEventListener('mouseleave', () => {
+    timerStart = Date.now();
+    startDismissTimer(Math.max(remainingTime, 1000));
+  });
 }
 
 function animateNumberCount(elementId, startVal, endVal, duration = 800, decimals = 4, suffix = '') {
@@ -1773,15 +1933,23 @@ function showAuthPageAlert(msg, isError = true) {
 
 function openAuthModal(mode = 'login') {
   const modal = document.getElementById('authModal');
-  if (modal) modal.style.display = 'flex';
+  if (modal) {
+    modal.classList.remove('modal-closing');
+    modal.style.display = 'flex';
+  }
   switchAuthMode(mode);
 }
 
 function closeAuthModal() {
   const modal = document.getElementById('authModal');
-  if (modal) modal.style.display = 'none';
-  const alertEl = document.getElementById('authAlert');
-  if (alertEl) alertEl.style.display = 'none';
+  if (!modal) return;
+  modal.classList.add('modal-closing');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    modal.classList.remove('modal-closing');
+    const alertEl = document.getElementById('authAlert');
+    if (alertEl) alertEl.style.display = 'none';
+  }, 190);
 }
 
 function handleModalBackdropClick(event) {
@@ -1871,10 +2039,11 @@ async function handleAuthSubmit(event) {
     fetchBudgetStatus();
     fetchRunHistory();
 
-    const welcomeMsg = currentAuthMode === 'register' 
+    pulseGlobeAnimation();
+    const welcomeMsg = currentAuthMode === 'register'
       ? `Account created! Welcome, ${data.username}.`
       : `Welcome back, ${data.username}!`;
-    alert(welcomeMsg);
+    showToast(currentAuthMode === 'register' ? 'Account Created' : 'Welcome Back', welcomeMsg, 'success');
 
   } catch (err) {
     showAuthAlert(err.message, true);
@@ -1904,7 +2073,7 @@ function logoutUser() {
   updateAuthNavUI(null);
   fetchBudgetStatus();
   fetchRunHistory();
-  alert('You have been signed out.');
+  showToast('Session Ended', 'You have been signed out of your account.', 'info');
 }
 
 // ─────────────────────────────────────────────
@@ -1914,12 +2083,19 @@ async function fetchRunHistory() {
   const tbody = document.getElementById('historyTableBody');
   if (!tbody) return;
 
+  const refreshIcon = document.getElementById('historyRefreshIcon');
+  if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
   const projectId = getCurrentProjectId();
   try {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-3);font-family:var(--font-mono);font-size:0.8rem;">
-          <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching runs from database...
+        <td colspan="7" style="padding:1.5rem 1rem;">
+          <div class="skeleton-loader" style="padding:0;">
+            <div class="skeleton-line" style="width:100%;height:18px;"></div>
+            <div class="skeleton-line" style="width:85%;height:18px;"></div>
+            <div class="skeleton-line" style="width:95%;height:18px;"></div>
+          </div>
         </td>
       </tr>
     `;
@@ -1939,11 +2115,16 @@ async function fetchRunHistory() {
   } catch (err) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center;padding:1.5rem;color:var(--rose);font-family:var(--font-mono);font-size:0.8rem;">
+        <td colspan="7" style="text-align:center;padding:1.5rem;color:var(--rose);font-family:var(--font-mono);font-size:0.8rem;animation:tabFadeUp 0.3s ease both;">
           <i class="fa-solid fa-triangle-exclamation"></i> Error loading history: ${escapeHtml(err.message)}
         </td>
       </tr>
     `;
+    showToast('History Notice', err.message, 'warn');
+  } finally {
+    if (refreshIcon) {
+      setTimeout(() => { refreshIcon.classList.remove('fa-spin'); }, 400);
+    }
   }
 }
 
@@ -1954,8 +2135,8 @@ function renderHistoryTable(runs) {
   if (!runs || runs.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center;padding:2rem;color:var(--text-3);font-family:var(--font-mono);font-size:0.82rem;">
-          <i class="fa-solid fa-folder-open" style="font-size:1.8rem;margin-bottom:0.5rem;display:block;color:var(--text-3);"></i>
+        <td colspan="7" style="text-align:center;padding:2.5rem 1rem;color:var(--text-3);font-family:var(--font-mono);font-size:0.82rem;animation:tabFadeUp 0.3s ease both;">
+          <i class="fa-solid fa-folder-open" style="font-size:2rem;margin-bottom:0.6rem;display:block;color:var(--text-3);"></i>
           No execution runs found yet. Profile some code to persist records in MongoDB.
         </td>
       </tr>
@@ -1963,7 +2144,7 @@ function renderHistoryTable(runs) {
     return;
   }
 
-  tbody.innerHTML = runs.map(run => {
+  tbody.innerHTML = runs.map((run, idx) => {
     const ts = run.timestamp ? new Date(run.timestamp).toLocaleString() : 'N/A';
     const lang = escapeHtml(run.language || 'python');
     const time = run.execution_time_s != null ? `${Number(run.execution_time_s).toFixed(4)}s` : '-';
@@ -1973,7 +2154,7 @@ function renderHistoryTable(runs) {
     const hotspots = run.hotspots_count != null ? run.hotspots_count : 0;
 
     return `
-      <tr class="history-row">
+      <tr class="history-row" style="animation-delay:${idx * 30}ms;">
         <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-3);">${ts}</td>
         <td>
           <span class="pill" style="font-size:0.75rem;padding:0.15rem 0.5rem;text-transform:capitalize;">${lang}</span>
